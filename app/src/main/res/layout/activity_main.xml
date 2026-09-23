@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="보이스피싱 안심콜"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:paddingBottom="8dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="기본 전화 앱은 그대로 사용하시고, 이 앱은 뒤에서 통화 시간만 확인합니다.\n통화가 10분을 넘으면 화면에 주의 문구가 뜨고, 자녀에게 문자로 알려드려요."
+        android:textSize="14sp"
+        android:paddingBottom="24dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="자녀(알림 받을) 연락처"
+        android:textStyle="bold"
+        android:paddingTop="8dp" />
+
+    <EditText
+        android:id="@+id/et_child_number"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="phone"
+        android:hint="예: 01012345678" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="예외로 둘 번호(가족 등, 콤마로 구분)"
+        android:textStyle="bold"
+        android:paddingTop="24dp" />
+
+    <EditText
+        android:id="@+id/et_whitelist_numbers"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="phone"
+        android:hint="예: 01011112222,0233334444" />
+
+    <Button
+        android:id="@+id/btn_save"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:text="저장하고 감시 시작하기" />
+
+</LinearLayout>
