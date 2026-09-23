@@ -17,6 +17,9 @@ class CallStateReceiver : BroadcastReceiver() {
         try {
             if (intent.action != "android.intent.action.PHONE_STATE") return
 
+            // 감시가 꺼져 있으면 아무 것도 하지 않는다
+            if (!PrefsHelper.isMonitoring(context)) return
+
             val state = intent.getStringExtra(TelephonyManager.EXTRA_STATE) ?: return
             val incomingNumber = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER)
 
