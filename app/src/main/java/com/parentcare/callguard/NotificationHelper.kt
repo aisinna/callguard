@@ -117,4 +117,13 @@ object NotificationHelper {
             if (!canOverlay) return
 
             val i = Intent(context, WarningActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_AC
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                putExtra("number", number)
+                putExtra("seconds", seconds)
+            }
+            context.startActivity(i)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+}
