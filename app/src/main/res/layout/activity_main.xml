@@ -37,49 +37,130 @@
             android:textSize="13sp"
             android:background="#EEEEEE"
             android:textColor="#333333"
-            android:layout_marginBottom="24dp"
             android:text="설정을 저장하면 감시가 시작됩니다." />
 
+        <!-- 권한 진단 -->
+        <TextView
+            android:id="@+id/tv_permission"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="12dp"
+            android:textSize="13sp"
+            android:background="#FFF3E0"
+            android:textColor="#333333"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="20dp"
+            android:text="권한 확인 중..." />
+
+        <Button
+            android:id="@+id/btn_perm_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="① 다른 앱 위에 표시 권한 열기" />
+
+        <Button
+            android:id="@+id/btn_perm_alarm"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="② 알람 및 리마인더 권한 열기" />
+
+        <Button
+            android:id="@+id/btn_perm_battery"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="20dp"
+            android:text="③ 배터리 최적화 해제" />
+
+        <!-- 1차 알림 -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="1차 알림 시간 (분)"
+            android:text="1차 알림 시간"
             android:textStyle="bold" />
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/et_first_min"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:hint="분" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="분"
+                android:paddingLeft="4dp"
+                android:paddingRight="12dp"
+                android:gravity="center_vertical" />
+
+            <EditText
+                android:id="@+id/et_first_sec"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:hint="초" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="초"
+                android:paddingLeft="4dp"
+                android:gravity="center_vertical" />
+        </LinearLayout>
+
+        <!-- 2차 경고 -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="진동과 가벼운 알림을 띄웁니다."
-            android:textSize="12sp"
-            android:textColor="#888888" />
-
-        <EditText
-            android:id="@+id/et_first_minutes"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="number"
-            android:hint="예: 8" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="2차 경고 + 문자 발송 (분)"
+            android:text="2차 경고 + 문자 발송"
             android:textStyle="bold"
             android:paddingTop="20dp" />
 
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="전체화면 경고를 띄우고 자녀에게 문자를 보냅니다."
-            android:textSize="12sp"
-            android:textColor="#888888" />
+            android:orientation="horizontal">
 
-        <EditText
-            android:id="@+id/et_second_minutes"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="number"
-            android:hint="예: 10" />
+            <EditText
+                android:id="@+id/et_second_min"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:hint="분" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="분"
+                android:paddingLeft="4dp"
+                android:paddingRight="12dp"
+                android:gravity="center_vertical" />
+
+            <EditText
+                android:id="@+id/et_second_sec"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:hint="초" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="초"
+                android:paddingLeft="4dp"
+                android:gravity="center_vertical" />
+        </LinearLayout>
 
         <TextView
             android:layout_width="match_parent"
@@ -117,12 +198,19 @@
             android:text="저장하고 감시 시작하기" />
 
         <Button
-            android:id="@+id/btn_test"
+            android:id="@+id/btn_test_warning"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
+            android:text="경고 화면 테스트" />
+
+        <Button
+            android:id="@+id/btn_test_sms"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
             android:layout_marginBottom="24dp"
-            android:text="경고 화면 미리보기 (테스트)" />
+            android:text="문자 발송 테스트" />
 
     </LinearLayout>
 </ScrollView>
