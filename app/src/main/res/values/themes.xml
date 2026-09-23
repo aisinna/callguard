@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- 앱 기본 테마 -->
+    <style name="Theme.CallGuard" parent="Theme.AppCompat.DayNight.DarkActionBar">
+        <item name="colorPrimary">#D32F2F</item>
+        <item name="colorPrimaryDark">#B71C1C</item>
+        <item name="colorAccent">#FF5252</item>
+    </style>
+
+    <!-- 경고 화면용 테마 (액션바 없음, 전체화면 느낌) -->
+    <style name="Theme.CallGuard.Warning" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">#D32F2F</item>
+    </style>
+
+</resources>
