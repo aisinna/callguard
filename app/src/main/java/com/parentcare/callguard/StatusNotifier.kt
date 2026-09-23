@@ -35,8 +35,8 @@ object StatusNotifier {
     fun show(context: Context) {
         ensureChannel(context)
 
-        val first = PrefsHelper.getFirstMinutes(context)
-        val second = PrefsHelper.getSecondMinutes(context)
+        val first = PrefsHelper.formatSeconds(PrefsHelper.getFirstSeconds(context))
+        val second = PrefsHelper.formatSeconds(PrefsHelper.getSecondSeconds(context))
 
         val openIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -49,7 +49,7 @@ object StatusNotifier {
         val n = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_menu_call)
             .setContentTitle("보이스피싱 안심콜 감시 중")
-            .setContentText("통화 ${first}분 알림 · ${second}분 경고")
+            .setContentText("통화 $first 알림 · $second 경고")
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
             .setContentIntent(pi)
