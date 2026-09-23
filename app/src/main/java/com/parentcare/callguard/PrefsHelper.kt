@@ -8,12 +8,15 @@ object PrefsHelper {
     private const val KEY_CHILD_NUMBER = "child_number"
     private const val KEY_WHITELIST = "whitelist_numbers"
     private const val KEY_LAST_NUMBER = "last_number"
-    private const val KEY_FIRST_MINUTES = "first_minutes"
-    private const val KEY_SECOND_MINUTES = "second_minutes"
+    private const val KEY_FIRST_SECONDS = "first_seconds"
+    private const val KEY_SECOND_SECONDS = "second_seconds"
     private const val KEY_MONITORING = "monitoring_enabled"
 
-    const val DEFAULT_FIRST = 8
-    const val DEFAULT_SECOND = 10
+    // 기본값: 8분 / 10분 (초 단위)
+    const val DEFAULT_FIRST_SEC = 480
+    const val DEFAULT_SECOND_SEC = 600
+
+    // ----- 감시 on/off -----
 
     fun setMonitoring(context: Context, enabled: Boolean) {
         prefs(context).edit().putBoolean(KEY_MONITORING, enabled).apply()
@@ -23,21 +26,39 @@ object PrefsHelper {
         return prefs(context).getBoolean(KEY_MONITORING, false)
     }
 
-    fun setFirstMinutes(context: Context, minutes: Int) {
-        prefs(context).edit().putInt(KEY_FIRST_MINUTES, minutes).apply()
+    // ----- 1차 알림 시간 (초) -----
+
+    fun setFirstSeconds(context: Context, seconds: Int) {
+        prefs(context).edit().putInt(KEY_FIRST_SECONDS, seconds).apply()
     }
 
-    fun getFirstMinutes(context: Context): Int {
-        return prefs(context).getInt(KEY_FIRST_MINUTES, DEFAULT_FIRST)
+    fun getFirstSeconds(context: Context): Int {
+        return prefs(context).getInt(KEY_FIRST_SECONDS, DEFAULT_FIRST_SEC)
     }
 
-    fun setSecondMinutes(context: Context, minutes: Int) {
-        prefs(context).edit().putInt(KEY_SECOND_MINUTES, minutes).apply()
+    // ----- 2차 경고 시간 (초) -----
+
+    fun setSecondSeconds(context: Context, seconds: Int) {
+        prefs(context).edit().putInt(KEY_SECOND_SECONDS, seconds).apply()
     }
 
-    fun getSecondMinutes(context: Context): Int {
-        return prefs(context).getInt(KEY_SECOND_MINUTES, DEFAULT_SECOND)
+    fun getSecondSeconds(context: Context): Int {
+        return prefs(context).getInt(KEY_SECOND_SECONDS, DEFAULT_SECOND_SEC)
     }
+
+    // ----- 초 -> "n분 n초" 문자열 -----
+
+    fun formatSeconds(totalSeconds: Int): String {
+        val m = totalSeconds / 60
+        val s = totalSeconds % 60
+        return when {
+            m > 0 && s > 0 -> "${m}분 ${s}초"
+            m > 0 -> "${m}분"
+            else -> "${s}초"
+        }
+    }
+
+    // ----- 자녀 번호 -----
 
     fun setChildNumber(context: Context, number: String) {
         prefs(context).edit().putString(KEY_CHILD_NUMBER, number).apply()
@@ -46,6 +67,8 @@ object PrefsHelper {
     fun getChildNumber(context: Context): String {
         return prefs(context).getString(KEY_CHILD_NUMBER, "") ?: ""
     }
+
+    // ----- 화이트리스트 -----
 
     fun setWhitelistRaw(context: Context, raw: String) {
         prefs(context).edit().putString(KEY_WHITELIST, raw).apply()
@@ -63,6 +86,8 @@ object PrefsHelper {
         if (normalized.isEmpty()) return false
         return list.any { it.isNotEmpty() && normalized.endsWith(it) }
     }
+
+    // ----- 마지막 통화 번호 -----
 
     fun setLastNumber(context: Context, number: String) {
         prefs(context).edit().putString(KEY_LAST_NUMBER, number).apply()
