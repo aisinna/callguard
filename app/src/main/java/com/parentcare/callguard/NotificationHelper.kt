@@ -33,24 +33,25 @@ object NotificationHelper {
         }
     }
 
-    fun showFirstWarning(context: Context) {
+    fun showFirstWarning(context: Context, minutes: Int) {
         ensureChannels(context)
         val n = NotificationCompat.Builder(context, CHANNEL_WARN)
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
             .setContentTitle("통화가 길어지고 있어요")
-            .setContentText("통화 8분 경과. 잠시 후 안내가 표시됩니다.")
+            .setContentText("통화 ${minutes}분 경과. 잠시 후 안내가 표시됩니다.")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .build()
         context.getSystemService(NotificationManager::class.java).notify(2001, n)
     }
 
-    fun showSecondWarning(context: Context, number: String, elapsedMinutes: Int) {
+    fun showSecondWarning(context: Context, number: String, minutes: Int) {
         ensureChannels(context)
 
         val fullScreenIntent = Intent(context, WarningActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             putExtra("number", number)
+            putExtra("minutes", minutes)
         }
 
         val pi = PendingIntent.getActivity(
@@ -61,10 +62,10 @@ object NotificationHelper {
         val n = NotificationCompat.Builder(context, CHANNEL_ALERT)
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
             .setContentTitle("보이스피싱 주의")
-            .setContentText("[$number] 와(과) ${elapsedMinutes}분째 통화 중입니다.")
+            .setContentText("[$number] 와(과) ${minutes}분째 통화 중입니다.")
             .setStyle(
                 NotificationCompat.BigTextStyle().bigText(
-                    "통화가 ${elapsedMinutes}분을 넘었습니다.\n" +
+                    "통화가 ${minutes}분을 넘었습니다.\n" +
                     "송금·계좌번호·현금 이야기가 나오면 즉시 끊고 자녀에게 확인하세요."
                 )
             )
