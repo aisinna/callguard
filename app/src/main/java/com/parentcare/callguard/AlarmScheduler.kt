@@ -7,10 +7,6 @@ import android.content.Intent
 import android.os.Build
 import android.util.Log
 
-/**
- * 사용자가 설정한 시간(1차/2차)에 맞춰 경고를 예약한다.
- * 포그라운드 서비스를 쓰지 않아 크래시·배터리 문제가 없다.
- */
 object AlarmScheduler {
 
     private const val TAG = "AlarmScheduler"
@@ -21,19 +17,19 @@ object AlarmScheduler {
         val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val now = System.currentTimeMillis()
 
-        val firstMin = PrefsHelper.getFirstMinutes(context).toLong()
-        val secondMin = PrefsHelper.getSecondMinutes(context).toLong()
+        val firstSec = PrefsHelper.getFirstSeconds(context)
+        val secondSec = PrefsHelper.getSecondSeconds(context)
 
         scheduleOne(
             context, am, REQ_FIRST, AlarmReceiver.TYPE_FIRST, number,
-            now + firstMin * 60_000, firstMin.toInt()
+            now + firstSec * 1000L, firstSec
         )
         scheduleOne(
             context, am, REQ_SECOND, AlarmReceiver.TYPE_SECOND, number,
-            now + secondMin * 60_000, secondMin.toInt()
+            now + secondSec * 1000L, secondSec
         )
 
-        Log.d(TAG, "예약 완료: ${firstMin}분 / ${secondMin}분 후")
+        Log.d(TAG, "예약 완료: ${firstSec}초 / ${secondSec}초 후")
     }
 
     private fun scheduleOne(
@@ -43,25 +39,36 @@ object AlarmScheduler {
         type: String,
         number: String,
         triggerAt: Long,
-        minutes: Int
+        seconds: Int
     ) {
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             action = type
             putExtra(AlarmReceiver.EXTRA_NUMBER, number)
-            putExtra(AlarmReceiver.EXTRA_MINUTES, minutes)
+            putExtra(AlarmReceiver.EXTRA_SECONDS, seconds)
         }
         val pi = PendingIntent.getBroadcast(
             context, requestCode, intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (am.canScheduleExactAlarms()) {
+                    am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi)
+                    Log.d(TAG, "정확 알람 예약")
+                } else {
+                    // 권한이 없으면 알람시계 방식으로 우회 (정확도 유지)
+                    val info = AlarmManager.AlarmClockInfo(triggerAt, pi)
+                    am.setAlarmClock(info, pi)
+                    Log.w(TAG, "정확 알람 권한 없음 -> AlarmClock 으로 대체")
+                }
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi)
             } else {
                 am.setExact(AlarmManager.RTC_WAKEUP, triggerAt, pi)
             }
         } catch (e: SecurityException) {
-            Log.w(TAG, "정확 알람 권한 없음, 일반 알람 사용", e)
+            Log.w(TAG, "알람 예약 권한 오류, 일반 알람 사용", e)
             am.set(AlarmManager.RTC_WAKEUP, triggerAt, pi)
         }
     }
