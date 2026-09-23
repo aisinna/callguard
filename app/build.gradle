@@ -1,0 +1,7 @@
+// 이 파일은 프로젝트 최상단(루트)에 "build.gradle" 이름으로 두세요.
+// app 폴더 안의 build.gradle 과는 다른 파일입니다. 헷갈리지 마세요!
+
+plugins {
+    id 'com.android.application' version '8.4.0' apply false
+    id 'org.jetbrains.kotlin.android' version '1.9.23' apply false
+}
