@@ -22,13 +22,13 @@ class AlarmReceiver : BroadcastReceiver() {
 
             when (intent.action) {
                 TYPE_FIRST -> {
-                    Log.d(TAG, "1차 경고 (${seconds}초)")
+                    Log.d(TAG, "1차 알림 (${seconds}초)")
                     NotificationHelper.showFirstWarning(context, seconds)
                 }
                 TYPE_SECOND -> {
                     Log.d(TAG, "2차 경고 (${seconds}초)")
                     NotificationHelper.showSecondWarning(context, number, seconds)
-                    SmsHelper.notifyChild(context, number, seconds)
+                    SmsHelper.notifyGuardians(context, number, seconds)
                 }
             }
         } catch (e: Exception) {
