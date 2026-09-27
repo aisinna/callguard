@@ -12,57 +12,68 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 
 /**
- * 자녀에게 SMS 알림을 보낸다.
- * 발송 성공/실패 결과를 알림으로 보여줘서 왜 안 갔는지 바로 알 수 있게 한다.
+ * 등록된 보호자 전원에게 알림 문자를 보낸다.
  */
 object SmsHelper {
 
     private const val TAG = "SmsHelper"
-    private const val CHANNEL_RESULT = "call_guard_sms_result_v2"
+    private const val CHANNEL_RESULT = "seorojikim_sms_result"
 
-    fun notifyChild(context: Context, callingNumber: String, elapsedSeconds: Int) {
-        val childNumber = PrefsHelper.getChildNumber(context).trim()
+    fun notifyGuardians(context: Context, callingNumber: String, elapsedSeconds: Int) {
+        val guardians = PrefsHelper.getGuardianList(context)
         val timeText = PrefsHelper.formatSeconds(elapsedSeconds)
+        val myName = PrefsHelper.getMyName(context).ifBlank { "보호 대상자" }
 
-        if (childNumber.isBlank()) {
-            showResult(context, "문자 미발송", "자녀 연락처가 등록되어 있지 않습니다.")
+        if (guardians.isEmpty()) {
+            showResult(context, "문자 미발송", "등록된 보호자가 없습니다.")
             return
         }
 
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS)
             != PackageManager.PERMISSION_GRANTED
         ) {
-            showResult(context, "문자 미발송", "문자 발송 권한(SEND_SMS)이 없습니다.")
+            showResult(context, "문자 미발송", "문자 발송 권한이 없습니다.")
             return
         }
 
-        val message = "[보이스피싱 안심콜]\n" +
-                "부모님이 ${timeText}째 통화 중입니다.\n" +
+        val message = "[서로지킴]\n" +
+                "${myName}님이 ${timeText}째 통화 중입니다.\n" +
                 "상대 번호: $callingNumber\n" +
                 "안부 확인 부탁드려요."
 
-        try {
-            val smsManager = getSmsManager(context)
-            val parts = smsManager.divideMessage(message)
+        var success = 0
+        var failed = 0
+        val errors = StringBuilder()
 
-            if (parts.size > 1) {
-                smsManager.sendMultipartTextMessage(childNumber, null, parts, null, null)
-            } else {
-                smsManager.sendTextMessage(childNumber, null, message, null, null)
+        for (number in guardians) {
+            try {
+                val smsManager = getSmsManager(context)
+                val parts = smsManager.divideMessage(message)
+                if (parts.size > 1) {
+                    smsManager.sendMultipartTextMessage(number, null, parts, null, null)
+                } else {
+                    smsManager.sendTextMessage(number, null, message, null, null)
+                }
+                success++
+                Log.d(TAG, "발송 완료 -> $number")
+            } catch (e: Exception) {
+                failed++
+                errors.append("$number: ${e.message}\n")
+                Log.e(TAG, "발송 실패 -> $number", e)
             }
-
-            Log.d(TAG, "문자 발송 요청 완료 -> $childNumber")
-            showResult(context, "문자 발송함", "$childNumber 로 알림을 보냈습니다.")
-
-        } catch (e: Exception) {
-            Log.e(TAG, "문자 발송 실패", e)
-            showResult(context, "문자 발송 실패", "${e.message}")
         }
+
+        val title = if (failed == 0) "문자 발송함 ($success 명)" else "일부 발송 실패"
+        val body = buildString {
+            append("성공 ${success}건 / 실패 ${failed}건\n")
+            append("대상: ${guardians.joinToString(", ")}")
+            if (errors.isNotEmpty()) append("\n\n$errors")
+        }
+        showResult(context, title, body)
     }
 
-    /** 테스트 버튼용 */
     fun sendTest(context: Context) {
-        notifyChild(context, "[휴대전화번호_REDACTED](테스트)", PrefsHelper.getSecondSeconds(context))
+        notifyGuardians(context, "0212345678(테스트)", PrefsHelper.getSecondSeconds(context))
     }
 
     private fun getSmsManager(context: Context): SmsManager {
@@ -83,7 +94,6 @@ object SmsHelper {
                 context.getSystemService(NotificationManager::class.java)
                     .createNotificationChannel(ch)
             }
-
             val n = NotificationCompat.Builder(context, CHANNEL_RESULT)
                 .setSmallIcon(android.R.drawable.ic_dialog_email)
                 .setContentTitle(title)
@@ -91,10 +101,9 @@ object SmsHelper {
                 .setStyle(NotificationCompat.BigTextStyle().bigText(body))
                 .setAutoCancel(true)
                 .build()
-
             context.getSystemService(NotificationManager::class.java).notify(2100, n)
         } catch (e: Exception) {
-            Log.e(TAG, "결과 알림 표시 실패", e)
+            Log.e(TAG, "결과 알림 실패", e)
         }
     }
 }
