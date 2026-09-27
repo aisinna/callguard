@@ -1,35 +1,97 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:background="#D32F2F"
-    android:padding="32dp">
+    android:background="#C62828">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="⚠"
-        android:textSize="72sp"
-        android:layout_gravity="center"
-        android:paddingBottom="16dp" />
-
-    <TextView
-        android:id="@+id/tv_warning_message"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="#FFFFFF"
-        android:textSize="20sp"
-        android:lineSpacingExtra="6dp"
-        android:gravity="center" />
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:padding="28dp">
 
-    <Button
-        android:id="@+id/btn_close"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="40dp"
-        android:text="확인했습니다"
-        android:textSize="18sp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⚠"
+            android:textSize="64sp"
+            android:textColor="#FFFFFF"
+            android:paddingTop="24dp" />
 
-</LinearLayout>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="보이스피싱 주의"
+            android:textSize="30sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:gravity="center"
+            android:paddingTop="8dp"
+            android:paddingBottom="20dp" />
+
+        <TextView
+            android:id="@+id/tv_warning_message"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="17sp"
+            android:textColor="#FFFFFF"
+            android:lineSpacingExtra="6dp"
+            android:paddingBottom="24dp" />
+
+        <Button
+            android:id="@+id/btn_hangup"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:text="지금 바로 전화 끊기"
+            android:textSize="19sp"
+            android:textStyle="bold"
+            android:textColor="#C62828"
+            android:background="#FFFFFF" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="피싱 전화는 바로 끊어도 아무 문제 없습니다."
+            android:textSize="13sp"
+            android:textColor="#FFCDD2"
+            android:gravity="center"
+            android:paddingTop="8dp"
+            android:paddingBottom="28dp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#E57373" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="내가 아는 사람과의 정상 통화인가요?"
+            android:textSize="14sp"
+            android:textColor="#FFFFFF"
+            android:gravity="center"
+            android:paddingTop="20dp"
+            android:paddingBottom="8dp" />
+
+        <Button
+            android:id="@+id/btn_close"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="경고 해제 (보호자에게 안심 문자)"
+            android:textSize="16sp"
+            android:textColor="#FFFFFF"
+            android:background="#8E0000" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="보호자에게 '안심하세요'라는 문자가 발송됩니다."
+            android:textSize="12sp"
+            android:textColor="#FFCDD2"
+            android:gravity="center"
+            android:paddingTop="8dp"
+            android:paddingBottom="24dp" />
+
+    </LinearLayout>
+</ScrollView>
