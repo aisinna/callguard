@@ -5,16 +5,43 @@ import android.content.Context
 object PrefsHelper {
 
     private const val PREFS_NAME = "call_guard_prefs"
-    private const val KEY_CHILD_NUMBER = "child_number"
+    private const val KEY_MY_NAME = "my_name"
+    private const val KEY_GUARDIANS = "guardian_numbers"
     private const val KEY_WHITELIST = "whitelist_numbers"
     private const val KEY_LAST_NUMBER = "last_number"
     private const val KEY_FIRST_SECONDS = "first_seconds"
     private const val KEY_SECOND_SECONDS = "second_seconds"
     private const val KEY_MONITORING = "monitoring_enabled"
+    private const val KEY_AGE_GROUP = "age_group"
 
-    // 기본값: 8분 / 10분 (초 단위)
     const val DEFAULT_FIRST_SEC = 480
     const val DEFAULT_SECOND_SEC = 600
+
+    /** 연령대별 권장 시간 (1차초, 2차초) */
+    fun recommendedSeconds(ageGroup: String): Pair<Int, Int> = when (ageGroup) {
+        "20~30대" -> Pair(900, 1200)   // 15분 / 20분
+        "40~50대" -> Pair(600, 900)    // 10분 / 15분
+        "60대 이상" -> Pair(480, 600)  // 8분 / 10분
+        else -> Pair(DEFAULT_FIRST_SEC, DEFAULT_SECOND_SEC)
+    }
+
+    fun setAgeGroup(context: Context, group: String) {
+        prefs(context).edit().putString(KEY_AGE_GROUP, group).apply()
+    }
+
+    fun getAgeGroup(context: Context): String {
+        return prefs(context).getString(KEY_AGE_GROUP, "") ?: ""
+    }
+
+    // ----- 내 이름 -----
+
+    fun setMyName(context: Context, name: String) {
+        prefs(context).edit().putString(KEY_MY_NAME, name).apply()
+    }
+
+    fun getMyName(context: Context): String {
+        return prefs(context).getString(KEY_MY_NAME, "") ?: ""
+    }
 
     // ----- 감시 on/off -----
 
@@ -26,7 +53,7 @@ object PrefsHelper {
         return prefs(context).getBoolean(KEY_MONITORING, false)
     }
 
-    // ----- 1차 알림 시간 (초) -----
+    // ----- 시간 설정 (초) -----
 
     fun setFirstSeconds(context: Context, seconds: Int) {
         prefs(context).edit().putInt(KEY_FIRST_SECONDS, seconds).apply()
@@ -36,8 +63,6 @@ object PrefsHelper {
         return prefs(context).getInt(KEY_FIRST_SECONDS, DEFAULT_FIRST_SEC)
     }
 
-    // ----- 2차 경고 시간 (초) -----
-
     fun setSecondSeconds(context: Context, seconds: Int) {
         prefs(context).edit().putInt(KEY_SECOND_SECONDS, seconds).apply()
     }
@@ -45,8 +70,6 @@ object PrefsHelper {
     fun getSecondSeconds(context: Context): Int {
         return prefs(context).getInt(KEY_SECOND_SECONDS, DEFAULT_SECOND_SEC)
     }
-
-    // ----- 초 -> "n분 n초" 문자열 -----
 
     fun formatSeconds(totalSeconds: Int): String {
         val m = totalSeconds / 60
@@ -58,14 +81,23 @@ object PrefsHelper {
         }
     }
 
-    // ----- 자녀 번호 -----
+    // ----- 보호자 목록 (콤마 구분, 최대 3명) -----
 
-    fun setChildNumber(context: Context, number: String) {
-        prefs(context).edit().putString(KEY_CHILD_NUMBER, number).apply()
+    fun setGuardiansRaw(context: Context, raw: String) {
+        prefs(context).edit().putString(KEY_GUARDIANS, raw).apply()
     }
 
-    fun getChildNumber(context: Context): String {
-        return prefs(context).getString(KEY_CHILD_NUMBER, "") ?: ""
+    fun getGuardiansRaw(context: Context): String {
+        return prefs(context).getString(KEY_GUARDIANS, "") ?: ""
+    }
+
+    fun getGuardianList(context: Context): List<String> {
+        val raw = getGuardiansRaw(context)
+        if (raw.isBlank()) return emptyList()
+        return raw.split(",")
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+            .take(3)
     }
 
     // ----- 화이트리스트 -----
@@ -79,11 +111,17 @@ object PrefsHelper {
     }
 
     fun isWhitelisted(context: Context, number: String): Boolean {
+        val normalized = number.filter { it.isDigit() }
+        if (normalized.isEmpty()) return false
+
+        // 보호자 번호는 자동으로 예외 처리
+        val guardians = getGuardianList(context)
+            .map { g -> g.filter { it.isDigit() } }
+        if (guardians.any { it.isNotEmpty() && normalized.endsWith(it) }) return true
+
         val raw = getWhitelistRaw(context)
         if (raw.isBlank()) return false
         val list = raw.split(",").map { item -> item.trim().filter { c -> c.isDigit() } }
-        val normalized = number.filter { it.isDigit() }
-        if (normalized.isEmpty()) return false
         return list.any { it.isNotEmpty() && normalized.endsWith(it) }
     }
 
