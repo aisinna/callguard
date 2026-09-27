@@ -12,34 +12,60 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 
 /**
- * 등록된 보호자 전원에게 알림 문자를 보낸다.
+ * 보호자 전원에게 문자를 보낸다.
+ * - notifyGuardians : 장시간 통화 경고
+ * - sendSafeNotice  : 본인이 '경고 해제'를 눌렀을 때 보내는 안심 문자
  */
 object SmsHelper {
 
     private const val TAG = "SmsHelper"
     private const val CHANNEL_RESULT = "seorojikim_sms_result"
 
+    /** 2차 경고 시점에 자동 발송 */
     fun notifyGuardians(context: Context, callingNumber: String, elapsedSeconds: Int) {
-        val guardians = PrefsHelper.getGuardianList(context)
         val timeText = PrefsHelper.formatSeconds(elapsedSeconds)
         val myName = PrefsHelper.getMyName(context).ifBlank { "보호 대상자" }
 
+        val message = "[서로지킴]\n" +
+                "${myName}님이 ${timeText}째 통화 중입니다.\n" +
+                "상대 번호: $callingNumber\n" +
+                "안부 확인 부탁드려요."
+
+        sendToAll(context, message, "경고 문자")
+    }
+
+    /** 본인이 '경고 해제'를 눌렀을 때 발송 */
+    fun sendSafeNotice(context: Context) {
+        val myName = PrefsHelper.getMyName(context).ifBlank { "보호 대상자" }
+
+        val message = "[서로지킴]\n" +
+                "안심하세요. ${myName}님이 직접 확인했습니다.\n" +
+                "아는 사람과 통화 중이니 걱정하지 않으셔도 됩니다."
+
+        sendToAll(context, message, "안심 문자")
+    }
+
+    /** 테스트 버튼용 */
+    fun sendTest(context: Context) {
+        notifyGuardians(context, "0212345678(테스트)", PrefsHelper.getSecondSeconds(context))
+    }
+
+    // ----- 공통 발송 처리 -----
+
+    private fun sendToAll(context: Context, message: String, label: String) {
+        val guardians = PrefsHelper.getGuardianList(context)
+
         if (guardians.isEmpty()) {
-            showResult(context, "문자 미발송", "등록된 보호자가 없습니다.")
+            showResult(context, "$label 미발송", "등록된 보호자가 없습니다.")
             return
         }
 
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS)
             != PackageManager.PERMISSION_GRANTED
         ) {
-            showResult(context, "문자 미발송", "문자 발송 권한이 없습니다.")
+            showResult(context, "$label 미발송", "문자 발송 권한이 없습니다.")
             return
         }
-
-        val message = "[서로지킴]\n" +
-                "${myName}님이 ${timeText}째 통화 중입니다.\n" +
-                "상대 번호: $callingNumber\n" +
-                "안부 확인 부탁드려요."
 
         var success = 0
         var failed = 0
@@ -55,25 +81,21 @@ object SmsHelper {
                     smsManager.sendTextMessage(number, null, message, null, null)
                 }
                 success++
-                Log.d(TAG, "발송 완료 -> $number")
+                Log.d(TAG, "$label 발송 완료 -> $number")
             } catch (e: Exception) {
                 failed++
                 errors.append("$number: ${e.message}\n")
-                Log.e(TAG, "발송 실패 -> $number", e)
+                Log.e(TAG, "$label 발송 실패 -> $number", e)
             }
         }
 
-        val title = if (failed == 0) "문자 발송함 ($success 명)" else "일부 발송 실패"
+        val title = if (failed == 0) "$label 발송함 (${success}명)" else "$label 일부 실패"
         val body = buildString {
             append("성공 ${success}건 / 실패 ${failed}건\n")
             append("대상: ${guardians.joinToString(", ")}")
             if (errors.isNotEmpty()) append("\n\n$errors")
         }
         showResult(context, title, body)
-    }
-
-    fun sendTest(context: Context) {
-        notifyGuardians(context, "0212345678(테스트)", PrefsHelper.getSecondSeconds(context))
     }
 
     private fun getSmsManager(context: Context): SmsManager {
