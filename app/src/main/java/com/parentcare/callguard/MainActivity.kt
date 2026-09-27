@@ -12,6 +12,8 @@ import android.os.PowerManager
 import android.provider.Settings
 import android.widget.Button
 import android.widget.EditText
+import android.widget.RadioButton
+import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -20,16 +22,23 @@ import androidx.core.content.ContextCompat
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var etMyName: EditText
+    private lateinit var rgAge: RadioGroup
     private lateinit var etFirstMin: EditText
     private lateinit var etFirstSec: EditText
     private lateinit var etSecondMin: EditText
     private lateinit var etSecondSec: EditText
-    private lateinit var etChildNumber: EditText
+    private lateinit var etGuardian1: EditText
+    private lateinit var etGuardian2: EditText
+    private lateinit var etGuardian3: EditText
     private lateinit var etWhitelist: EditText
     private lateinit var tvStatus: TextView
     private lateinit var tvStatusDetail: TextView
     private lateinit var tvPermission: TextView
     private lateinit var btnSave: Button
+
+    /** 연령대 라디오 변경 시 자동 채우기를 막기 위한 플래그 */
+    private var loadingSaved = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,12 +60,18 @@ class MainActivity : AppCompatActivity() {
         refreshStatus()
     }
 
+    // ---------------- 화면 연결 ----------------
+
     private fun bindViews() {
+        etMyName = findViewById(R.id.et_my_name)
+        rgAge = findViewById(R.id.rg_age)
         etFirstMin = findViewById(R.id.et_first_min)
         etFirstSec = findViewById(R.id.et_first_sec)
         etSecondMin = findViewById(R.id.et_second_min)
         etSecondSec = findViewById(R.id.et_second_sec)
-        etChildNumber = findViewById(R.id.et_child_number)
+        etGuardian1 = findViewById(R.id.et_guardian1)
+        etGuardian2 = findViewById(R.id.et_guardian2)
+        etGuardian3 = findViewById(R.id.et_guardian3)
         etWhitelist = findViewById(R.id.et_whitelist_numbers)
         tvStatus = findViewById(R.id.tv_status)
         tvStatusDetail = findViewById(R.id.tv_status_detail)
@@ -65,24 +80,55 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadSaved() {
+        loadingSaved = true
+
+        etMyName.setText(PrefsHelper.getMyName(this))
+
+        when (PrefsHelper.getAgeGroup(this)) {
+            "20~30대" -> rgAge.check(R.id.rb_age_young)
+            "40~50대" -> rgAge.check(R.id.rb_age_mid)
+            "60대 이상" -> rgAge.check(R.id.rb_age_senior)
+        }
+
         val f = PrefsHelper.getFirstSeconds(this)
         val s = PrefsHelper.getSecondSeconds(this)
-        etFirstMin.setText((f / 60).toString())
-        etFirstSec.setText((f % 60).toString())
-        etSecondMin.setText((s / 60).toString())
-        etSecondSec.setText((s % 60).toString())
-        etChildNumber.setText(PrefsHelper.getChildNumber(this))
+        setTime(etFirstMin, etFirstSec, f)
+        setTime(etSecondMin, etSecondSec, s)
+
+        val guardians = PrefsHelper.getGuardianList(this)
+        etGuardian1.setText(guardians.getOrElse(0) { "" })
+        etGuardian2.setText(guardians.getOrElse(1) { "" })
+        etGuardian3.setText(guardians.getOrElse(2) { "" })
+
         etWhitelist.setText(PrefsHelper.getWhitelistRaw(this))
+
+        loadingSaved = false
     }
 
+    private fun setTime(etMin: EditText, etSec: EditText, totalSeconds: Int) {
+        etMin.setText((totalSeconds / 60).toString())
+        etSec.setText((totalSeconds % 60).toString())
+    }
+
+    // ---------------- 버튼 ----------------
+
     private fun setupButtons() {
+        rgAge.setOnCheckedChangeListener { _, checkedId ->
+            if (loadingSaved) return@setOnCheckedChangeListener
+            val group = ageGroupOf(checkedId) ?: return@setOnCheckedChangeListener
+            val (first, second) = PrefsHelper.recommendedSeconds(group)
+            setTime(etFirstMin, etFirstSec, first)
+            setTime(etSecondMin, etSecondSec, second)
+            toast("$group 권장 시간을 적용했습니다. 직접 수정해도 됩니다.")
+        }
+
         btnSave.setOnClickListener {
             if (PrefsHelper.isMonitoring(this)) stopMonitoring() else saveAndStart()
         }
 
         findViewById<Button>(R.id.btn_test_warning).setOnClickListener {
             NotificationHelper.showSecondWarning(
-                this, "[휴대전화번호_REDACTED](테스트)", PrefsHelper.getSecondSeconds(this)
+                this, "0212345678(테스트)", PrefsHelper.getSecondSeconds(this)
             )
         }
 
@@ -90,18 +136,19 @@ class MainActivity : AppCompatActivity() {
             SmsHelper.sendTest(this)
         }
 
-        findViewById<Button>(R.id.btn_perm_overlay).setOnClickListener {
-            openOverlaySettings()
-        }
-
-        findViewById<Button>(R.id.btn_perm_alarm).setOnClickListener {
-            openExactAlarmSettings()
-        }
-
-        findViewById<Button>(R.id.btn_perm_battery).setOnClickListener {
-            openBatterySettings()
-        }
+        findViewById<Button>(R.id.btn_perm_overlay).setOnClickListener { openOverlaySettings() }
+        findViewById<Button>(R.id.btn_perm_alarm).setOnClickListener { openExactAlarmSettings() }
+        findViewById<Button>(R.id.btn_perm_battery).setOnClickListener { openBatterySettings() }
     }
+
+    private fun ageGroupOf(checkedId: Int): String? = when (checkedId) {
+        R.id.rb_age_young -> "20~30대"
+        R.id.rb_age_mid -> "40~50대"
+        R.id.rb_age_senior -> "60대 이상"
+        else -> null
+    }
+
+    // ---------------- 저장 / 시작 ----------------
 
     private fun readSeconds(etMin: EditText, etSec: EditText): Int? {
         val m = etMin.text.toString().trim().ifEmpty { "0" }.toIntOrNull() ?: return null
@@ -112,11 +159,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun saveAndStart() {
+        val myName = etMyName.text.toString().trim()
         val first = readSeconds(etFirstMin, etFirstSec)
         val second = readSeconds(etSecondMin, etSecondSec)
-        val childNumber = etChildNumber.text.toString().trim()
+
+        val guardians = listOf(etGuardian1, etGuardian2, etGuardian3)
+            .map { it.text.toString().trim() }
+            .filter { it.isNotBlank() }
+
         val whitelistRaw = etWhitelist.text.toString().trim()
 
+        if (myName.isEmpty()) {
+            toast("내 이름을 입력해주세요")
+            return
+        }
         if (first == null) {
             toast("1차 알림 시간을 확인해주세요 (초는 0~59)")
             return
@@ -129,20 +185,22 @@ class MainActivity : AppCompatActivity() {
             toast("2차 시간은 1차 시간보다 커야 합니다")
             return
         }
-        if (childNumber.isEmpty()) {
-            toast("자녀 연락처를 입력해주세요")
+        if (guardians.isEmpty()) {
+            toast("보호자를 최소 1명 입력해주세요")
             return
         }
 
+        PrefsHelper.setMyName(this, myName)
+        ageGroupOf(rgAge.checkedRadioButtonId)?.let { PrefsHelper.setAgeGroup(this, it) }
         PrefsHelper.setFirstSeconds(this, first)
         PrefsHelper.setSecondSeconds(this, second)
-        PrefsHelper.setChildNumber(this, childNumber)
+        PrefsHelper.setGuardiansRaw(this, guardians.joinToString(","))
         PrefsHelper.setWhitelistRaw(this, whitelistRaw)
         PrefsHelper.setMonitoring(this, true)
 
         StatusNotifier.show(this)
         refreshStatus()
-        toast("감시를 시작했습니다")
+        toast("서로 지켜보기를 시작했습니다")
     }
 
     private fun stopMonitoring() {
@@ -150,37 +208,41 @@ class MainActivity : AppCompatActivity() {
         AlarmScheduler.cancelAll(this)
         StatusNotifier.hide(this)
         refreshStatus()
-        toast("감시를 중지했습니다")
+        toast("중지했습니다")
     }
+
+    // ---------------- 상태 표시 ----------------
 
     private fun refreshStatus() {
         val on = PrefsHelper.isMonitoring(this)
         val first = PrefsHelper.formatSeconds(PrefsHelper.getFirstSeconds(this))
         val second = PrefsHelper.formatSeconds(PrefsHelper.getSecondSeconds(this))
-        val child = PrefsHelper.getChildNumber(this)
+        val myName = PrefsHelper.getMyName(this)
+        val guardians = PrefsHelper.getGuardianList(this)
         val white = PrefsHelper.getWhitelistRaw(this)
 
         if (on) {
-            tvStatus.text = "감시 중"
+            tvStatus.text = "서로 지켜보는 중"
             tvStatus.setBackgroundColor(Color.parseColor("#2E7D32"))
-            btnSave.text = "감시 중지하기"
+            btnSave.text = "중지하기"
             tvStatusDetail.text = buildString {
-                append("통화 $first → 1차 알림\n")
-                append("통화 $second → 경고 화면 + 문자 발송\n")
-                append("알림 받을 번호: $child")
+                append("$myName 님을 지켜보고 있습니다\n\n")
+                append("통화 $first → 나에게 알림\n")
+                append("통화 $second → 경고 화면 + 보호자 알림\n")
+                append("보호자 ${guardians.size}명: ${guardians.joinToString(", ")}")
                 if (white.isNotBlank()) append("\n예외 번호: $white")
             }
         } else {
-            tvStatus.text = "감시 꺼짐"
+            tvStatus.text = "꺼짐"
             tvStatus.setBackgroundColor(Color.parseColor("#757575"))
-            btnSave.text = "저장하고 감시 시작하기"
-            tvStatusDetail.text = "설정을 입력하고 아래 버튼을 누르면 감시가 시작됩니다."
+            btnSave.text = "저장하고 시작하기"
+            tvStatusDetail.text = "설정을 입력하고 아래 버튼을 누르면 시작됩니다."
         }
 
         refreshPermissionStatus()
     }
 
-    private fun refreshPermissionStatus() {
+        private fun refreshPermissionStatus() {
         val overlay = canDrawOverlay()
         val exact = canScheduleExact()
         val battery = isIgnoringBattery()
@@ -194,7 +256,7 @@ class MainActivity : AppCompatActivity() {
         sb.append(mark(exact)).append(" 알람 및 리마인더  ← 정확한 시간 필수\n")
         sb.append(mark(battery)).append(" 배터리 최적화 해제")
 
-        if (!overlay || !exact) {
+        if (!overlay || !exact || !battery) {
             sb.append("\n\n아래 버튼으로 꺼진 권한을 켜주세요.")
         }
 
@@ -225,6 +287,8 @@ class MainActivity : AppCompatActivity() {
         } else true
     }
 
+    // ---------------- 설정 화면 열기 ----------------
+
     private fun openOverlaySettings() {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -236,7 +300,11 @@ class MainActivity : AppCompatActivity() {
                 )
             } else toast("이 버전에서는 별도 설정이 필요 없습니다")
         } catch (e: Exception) {
-            startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
+            try {
+                startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
+            } catch (e2: Exception) {
+                openAppDetails()
+            }
         }
     }
 
@@ -282,6 +350,8 @@ class MainActivity : AppCompatActivity() {
             toast("설정 화면을 열 수 없습니다")
         }
     }
+
+    // ---------------- 런타임 권한 ----------------
 
     private fun requestRuntimePermissions() {
         val permissions = mutableListOf(
