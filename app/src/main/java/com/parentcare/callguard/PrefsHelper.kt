@@ -12,26 +12,9 @@ object PrefsHelper {
     private const val KEY_FIRST_SECONDS = "first_seconds"
     private const val KEY_SECOND_SECONDS = "second_seconds"
     private const val KEY_MONITORING = "monitoring_enabled"
-    private const val KEY_AGE_GROUP = "age_group"
 
-    const val DEFAULT_FIRST_SEC = 480
-    const val DEFAULT_SECOND_SEC = 600
-
-    /** 연령대별 권장 시간 (1차초, 2차초) */
-    fun recommendedSeconds(ageGroup: String): Pair<Int, Int> = when (ageGroup) {
-        "20~30대" -> Pair(900, 1200)   // 15분 / 20분
-        "40~50대" -> Pair(600, 900)    // 10분 / 15분
-        "60대 이상" -> Pair(480, 600)  // 8분 / 10분
-        else -> Pair(DEFAULT_FIRST_SEC, DEFAULT_SECOND_SEC)
-    }
-
-    fun setAgeGroup(context: Context, group: String) {
-        prefs(context).edit().putString(KEY_AGE_GROUP, group).apply()
-    }
-
-    fun getAgeGroup(context: Context): String {
-        return prefs(context).getString(KEY_AGE_GROUP, "") ?: ""
-    }
+    const val DEFAULT_FIRST_SEC = 480   // 8분
+    const val DEFAULT_SECOND_SEC = 600  // 10분
 
     // ----- 내 이름 -----
 
@@ -43,7 +26,7 @@ object PrefsHelper {
         return prefs(context).getString(KEY_MY_NAME, "") ?: ""
     }
 
-    // ----- 감시 on/off -----
+    // ----- 동작 on/off -----
 
     fun setMonitoring(context: Context, enabled: Boolean) {
         prefs(context).edit().putBoolean(KEY_MONITORING, enabled).apply()
