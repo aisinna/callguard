@@ -12,9 +12,16 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="보이스피싱 안심콜"
-            android:textSize="22sp"
-            android:textStyle="bold"
+            android:text="서로지킴"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="우리가 서로를 지켜주는 보이스피싱 안전망"
+            android:textSize="13sp"
+            android:textColor="#888888"
             android:paddingBottom="16dp" />
 
         <TextView
@@ -27,7 +34,7 @@
             android:textStyle="bold"
             android:textColor="#FFFFFF"
             android:background="#757575"
-            android:text="감시 꺼짐" />
+            android:text="꺼짐" />
 
         <TextView
             android:id="@+id/tv_status_detail"
@@ -37,9 +44,8 @@
             android:textSize="13sp"
             android:background="#EEEEEE"
             android:textColor="#333333"
-            android:text="설정을 저장하면 감시가 시작됩니다." />
+            android:text="설정을 저장하면 서로 지켜보기가 시작됩니다." />
 
-        <!-- 권한 진단 -->
         <TextView
             android:id="@+id/tv_permission"
             android:layout_width="match_parent"
@@ -49,21 +55,21 @@
             android:background="#FFF3E0"
             android:textColor="#333333"
             android:layout_marginTop="8dp"
-            android:layout_marginBottom="20dp"
+            android:layout_marginBottom="16dp"
             android:text="권한 확인 중..." />
 
         <Button
             android:id="@+id/btn_perm_overlay"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="① 다른 앱 위에 표시 권한 열기" />
+            android:text="① 다른 앱 위에 표시 권한" />
 
         <Button
             android:id="@+id/btn_perm_alarm"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="② 알람 및 리마인더 권한 열기" />
+            android:text="② 알람 및 리마인더 권한" />
 
         <Button
             android:id="@+id/btn_perm_battery"
@@ -73,12 +79,73 @@
             android:layout_marginBottom="20dp"
             android:text="③ 배터리 최적화 해제" />
 
+        <!-- 내 정보 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="내 이름"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="보호자에게 보낼 문자에 표시됩니다."
+            android:textSize="12sp"
+            android:textColor="#888888" />
+
+        <EditText
+            android:id="@+id/et_my_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:hint="예: 김철수" />
+
+        <!-- 연령대 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="연령대 (권장 시간 자동 설정)"
+            android:textStyle="bold"
+            android:paddingTop="20dp" />
+
+        <RadioGroup
+            android:id="@+id/rg_age"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/rb_age_young"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="20~30대"
+                android:textSize="13sp" />
+
+            <RadioButton
+                android:id="@+id/rb_age_mid"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="40~50대"
+                android:textSize="13sp" />
+
+            <RadioButton
+                android:id="@+id/rb_age_senior"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="60대+"
+                android:textSize="13sp" />
+        </RadioGroup>
+
         <!-- 1차 알림 -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="1차 알림 시간"
-            android:textStyle="bold" />
+            android:text="1차 알림 (나에게만)"
+            android:textStyle="bold"
+            android:paddingTop="16dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -121,9 +188,9 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="2차 경고 + 문자 발송"
+            android:text="2차 경고 (보호자에게 알림)"
             android:textStyle="bold"
-            android:paddingTop="20dp" />
+            android:paddingTop="16dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -162,24 +229,58 @@
                 android:gravity="center_vertical" />
         </LinearLayout>
 
+        <!-- 보호자 -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="자녀(알림 받을) 연락처"
+            android:text="나를 지켜줄 보호자 (최대 3명)"
             android:textStyle="bold"
             android:paddingTop="20dp" />
 
-        <EditText
-            android:id="@+id/et_child_number"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="phone"
-            android:hint="예: [휴대전화번호_REDACTED]" />
-
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="예외로 둘 번호 (콤마로 구분)"
+            android:text="이 번호들은 통화 감시에서 자동으로 제외됩니다."
+            android:textSize="12sp"
+            android:textColor="#888888" />
+
+        <EditText
+            android:id="@+id/et_guardian1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="phone"
+            android:hint="보호자 1 (필수)" />
+
+        <EditText
+            android:id="@+id/et_guardian2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="phone"
+            android:hint="보호자 2 (선택)" />
+
+        <EditText
+            android:id="@+id/et_guardian3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="phone"
+            android:hint="보호자 3 (선택)" />
+
+        <!-- 상호 보호 안내 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="12dp"
+            android:layout_marginTop="12dp"
+            android:background="#E8F5E9"
+            android:textColor="#1B5E20"
+            android:textSize="13sp"
+            android:text="서로지킴은 한쪽만 보호받는 앱이 아닙니다.\n보호자에게도 이 앱을 설치하고, 나를 보호자로 등록해 달라고 하세요. 서로가 서로를 지켜주는 것이 가장 안전합니다." />
+
+        <!-- 예외 번호 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="그 밖의 예외 번호 (콤마로 구분)"
             android:textStyle="bold"
             android:paddingTop="20dp" />
 
@@ -188,14 +289,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="phone"
-            android:hint="예: [휴대전화번호_REDACTED],0233334444" />
+            android:hint="예: 021234567,0312345678" />
 
         <Button
             android:id="@+id/btn_save"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="28dp"
-            android:text="저장하고 감시 시작하기" />
+            android:text="저장하고 시작하기" />
 
         <Button
             android:id="@+id/btn_test_warning"
@@ -210,7 +311,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="24dp"
-            android:text="문자 발송 테스트" />
+            android:text="보호자 문자 테스트" />
 
     </LinearLayout>
 </ScrollView>
