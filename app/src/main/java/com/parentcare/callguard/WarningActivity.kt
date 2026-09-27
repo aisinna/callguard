@@ -14,14 +14,19 @@ class WarningActivity : AppCompatActivity() {
         val number = intent.getStringExtra("number") ?: "알 수 없는 번호"
         val seconds = intent.getIntExtra("seconds", PrefsHelper.getSecondSeconds(this))
         val timeText = PrefsHelper.formatSeconds(seconds)
+        val guardianCount = PrefsHelper.getGuardianList(this).size
 
         findViewById<TextView>(R.id.tv_warning_message).text = buildString {
             append("통화가 ${timeText}을(를) 넘었습니다\n\n")
             append("[$number] 번호와 통화 중\n\n")
-            append("- 낯선 사람이 송금, 계좌번호, 카드번호를 요구하나요?\n")
-            append("- '자녀', '경찰', '검찰', '은행'을 사칭하고 있나요?\n")
-            append("- 조금이라도 의심되면 바로 전화를 끊고\n")
-            append("  등록된 자녀에게 먼저 확인 전화를 하세요.")
+            append("- 송금, 계좌번호, 카드번호를 요구하나요?\n")
+            append("- '가족', '경찰', '검찰', '금융기관'을 사칭하나요?\n")
+            append("- 투자 수익이나 대출을 권유하나요?\n\n")
+            append("조금이라도 의심되면 바로 끊고\n")
+            append("보호자에게 먼저 확인하세요.\n\n")
+            if (guardianCount > 0) {
+                append("보호자 ${guardianCount}명에게 알림을 보냈습니다.")
+            }
         }
 
         findViewById<Button>(R.id.btn_close).setOnClickListener { finish() }
