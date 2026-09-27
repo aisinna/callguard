@@ -21,6 +21,7 @@ class WarningActivity : AppCompatActivity() {
             append("[$number] 번호와 통화 중\n\n")
             append("- 송금, 계좌번호, 카드번호를 요구하나요?\n")
             append("- '가족', '경찰', '검찰', '금융기관'을 사칭하나요?\n")
+            append("- 아무에게도 말하지 말라고 하나요?\n")
             append("- 투자 수익이나 대출을 권유하나요?\n\n")
             append("조금이라도 의심되면 바로 끊고\n")
             append("보호자에게 먼저 확인하세요.\n\n")
