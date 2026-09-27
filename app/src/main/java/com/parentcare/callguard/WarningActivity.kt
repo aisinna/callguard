@@ -19,8 +19,6 @@ class WarningActivity : AppCompatActivity() {
         val guardianCount = PrefsHelper.getGuardianList(this).size
 
         findViewById<TextView>(R.id.tv_warning_message).text = buildString {
-            append("통화가 ${timeText}을(를) 넘었습니다\n")
-            append("[$number] 번호와 통화 중\n\n")
             append("지금 이런 이야기가 오가고 있나요?\n\n")
             append("· 송금, 계좌번호, 카드번호를 요구한다\n")
             append("· '가족', '경찰', '검찰', '금융기관'을 사칭한다\n")
