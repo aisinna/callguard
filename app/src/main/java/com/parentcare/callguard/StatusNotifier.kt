@@ -44,7 +44,7 @@ object StatusNotifier {
         )
 
         val n = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_menu_call)
+            .setSmallIcon(R.drawable.ic_stat_callguard)
             .setContentTitle("서로지킴 동작 중")
             .setContentText("$first 알림 · $second 경고 · 보호자 ${count}명")
             .setPriority(NotificationCompat.PRIORITY_LOW)
