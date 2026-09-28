@@ -117,7 +117,7 @@ object SmsHelper {
                     .createNotificationChannel(ch)
             }
             val n = NotificationCompat.Builder(context, CHANNEL_RESULT)
-                .setSmallIcon(android.R.drawable.ic_dialog_email)
+                .setSmallIcon(R.drawable.ic_stat_callguard)
                 .setContentTitle(title)
                 .setContentText(body)
                 .setStyle(NotificationCompat.BigTextStyle().bigText(body))
