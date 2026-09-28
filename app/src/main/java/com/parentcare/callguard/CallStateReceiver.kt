@@ -87,6 +87,7 @@ class CallStateReceiver : BroadcastReceiver() {
                 PrefsHelper.setLastCallState(context, state)
                 PrefsHelper.clearLastNumber(context)
                 AlarmScheduler.cancelAll(context)
+                WarningOverlayService.stop(context) 
             }
         }
     }
