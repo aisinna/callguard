@@ -9,15 +9,13 @@ import android.util.Log
 /**
  * 통화 상태를 감시해 경고 알람을 예약/취소한다.
  *
- * 수신 통화: RINGING(번호 저장) → OFFHOOK(받음) → IDLE
- * 발신 통화: (RINGING 없이) OFFHOOK(발신 시작) → IDLE
+ * 감시 대상은 '걸려 온 전화'(수신)뿐이다. 내가 건 전화는 감시하지 않는다.
+ *
+ * 수신 통화: RINGING(번호 저장) → OFFHOOK(받음, 알람 예약) → IDLE(알람 취소)
+ * 발신 통화: (RINGING 없이) OFFHOOK → 감시 안 함 → IDLE
  *
  * 직전 상태를 SharedPreferences 에 저장해 두므로, 프로세스가 종료돼도
  * "RINGING 다음의 OFFHOOK = 수신, IDLE 다음의 OFFHOOK = 발신" 판정이 유지된다.
- *
- * 발신 번호는 PROCESS_OUTGOING_CALLS 권한이 있어야 알 수 있는데, 이 권한은
- * 보이스피싱 악성앱의 대표 권한이라 기기 보안 기능이 설치를 차단한다.
- * 그래서 발신 통화는 번호를 '모름'으로 두고 감시한다.
  */
 class CallStateReceiver : BroadcastReceiver() {
 
@@ -60,19 +58,20 @@ class CallStateReceiver : BroadcastReceiver() {
                 PrefsHelper.setLastCallState(context, state)
                 if (!monitoring) return
 
+                // RINGING 을 거쳐 왔으면 '걸려 온 전화'(수신), 아니면 '내가 건 전화'(발신)
                 val incoming = prev == TelephonyManager.EXTRA_STATE_RINGING
-                val number = if (incoming) {
-                    PrefsHelper.getLastNumber(context)
-                } else {
-                    // 발신: 이전 통화 번호가 남아 있으면 안 되므로 '모름'으로 처리
-                    PrefsHelper.UNKNOWN_NUMBER
-                }
-
-                if (number == PrefsHelper.UNKNOWN_NUMBER) {
+                if (!incoming) {
+                    // 내가 건 전화는 감시하지 않는다.
+                    // 혹시 남아 있을 이전 통화의 알람이 이번 통화 중에 울리지 않도록 함께 정리한다.
                     PrefsHelper.clearLastNumber(context)
+                    AlarmScheduler.cancelAll(context)
+                    Log.d(TAG, "발신 통화, 감시 안 함")
+                    return
                 }
 
-                Log.d(TAG, "통화 시작: ${if (incoming) "수신" else "발신"}, " +
+                // 걸려 온 전화 — 번호를 못 읽었으면(발신번호 표시제한 등) '알수없음'으로 감시한다
+                val number = PrefsHelper.getLastNumber(context)
+                Log.d(TAG, "수신 통화 시작, " +
                         "번호 ${if (number == PrefsHelper.UNKNOWN_NUMBER) "모름" else "확인됨"}")
 
                 if (PrefsHelper.isWhitelisted(context, number)) {
@@ -87,7 +86,7 @@ class CallStateReceiver : BroadcastReceiver() {
                 PrefsHelper.setLastCallState(context, state)
                 PrefsHelper.clearLastNumber(context)
                 AlarmScheduler.cancelAll(context)
-                WarningOverlayService.stop(context) 
+                WarningOverlayService.stop(context)   // 통화가 끝났으면 떠 있는 경고 오버레이도 닫는다
             }
         }
     }
