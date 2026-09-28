@@ -25,6 +25,10 @@ import androidx.core.content.ContextCompat
 
 class MainActivity : AppCompatActivity() {
 
+    companion object {
+        private const val REQ_CALL_LOG = 101
+    }
+
     private lateinit var etMyName: EditText
     private lateinit var etFirstMin: EditText
     private lateinit var etFirstSec: EditText
