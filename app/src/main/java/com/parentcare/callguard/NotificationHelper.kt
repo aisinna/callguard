@@ -65,7 +65,7 @@ object NotificationHelper {
         val timeText = PrefsHelper.formatSeconds(seconds)
 
         val n = NotificationCompat.Builder(context, CHANNEL_WARN)
-            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setSmallIcon(R.drawable.ic_stat_callguard)
             .setContentTitle("통화가 길어지고 있어요")
             .setContentText("통화 $timeText 경과. 잠시 후 안내가 표시됩니다.")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -94,7 +94,7 @@ object NotificationHelper {
         )
 
         val n = NotificationCompat.Builder(context, CHANNEL_ALERT)
-            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setSmallIcon(R.drawable.ic_stat_callguard)
             .setContentTitle("보이스피싱 주의")
             .setContentText("[$number] 와(과) ${timeText}째 통화 중입니다.")
             .setStyle(
