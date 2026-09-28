@@ -14,38 +14,69 @@ import android.util.Log
 /**
  * 진동 + 경고음을 직접 재생한다.
  * 알림 채널 설정(한 번 만들면 변경 불가)에 의존하지 않기 위함.
- * 통화 중에도 들리도록 ToneGenerator 를 함께 사용한다.
+ *
+ * 통화에 집중하면 소리는 잘 안 들리므로 '진동'을 주된 경고 수단으로 쓴다.
+ * (진동 패턴: [대기, 켬, 끔, 켬, 끔, ...] — 홀수 번째가 '징' 하고 울리는 구간)
  */
 object AlertPlayer {
 
     private const val TAG = "AlertPlayer"
 
-    /** 1차: 짧은 진동 + 짧은 알림음 */
+    /** 1차: 강한 진동 두 번  "징 ─ 징" */
+    internal val PATTERN_FIRST = longArrayOf(
+        0, 600, 250, 600
+    )
+
+    /** 2차: "징징징징" 을 3라운드 반복 (약 8초) */
+    internal val PATTERN_SECOND = longArrayOf(
+        0, 500, 150, 500, 150, 500, 150, 500,
+        700, 500, 150, 500, 150, 500, 150, 500,
+        700, 500, 150, 500, 150, 500, 150, 500
+    )
+
+    /** 1차: 강한 진동 + 짧은 알림음 */
     fun playFirst(context: Context) {
-        vibrate(context, longArrayOf(0, 300, 150, 300))
+        vibrate(context, PATTERN_FIRST)
         playTone(short = true)
     }
 
     /** 2차: 긴 진동 + 강한 경고음 */
     fun playSecond(context: Context) {
-        vibrate(context, longArrayOf(0, 600, 200, 600, 200, 600, 200, 600))
+        vibrate(context, PATTERN_SECOND)
         playTone(short = false)
         playRingtone(context)
     }
 
-    private fun vibrate(context: Context, pattern: LongArray) {
+    /**
+     * 진동 재생.
+     * - 켜는 구간은 최대 세기(255)로 울린다 (세기 조절을 지원하는 기기).
+     * - 알람 용도로 지정해, 통화 중/방해금지 상태에서도 억제되지 않게 한다.
+     */
+    private fun vibrate(context: Context, timings: LongArray) {
         try {
             val vibrator: Vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val vm = context.getSystemService(VibratorManager::class.java)
-                vm.defaultVibrator
+                context.getSystemService(VibratorManager::class.java).defaultVibrator
             } else {
                 @Suppress("DEPRECATION")
                 context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
             }
 
-            val effect = VibrationEffect.createWaveform(pattern, -1)
-            vibrator.vibrate(effect)
-            Log.d(TAG, "진동 재생")
+            val effect = if (vibrator.hasAmplitudeControl()) {
+                val amplitudes = IntArray(timings.size) { i -> if (i % 2 == 1) 255 else 0 }
+                VibrationEffect.createWaveform(timings, amplitudes, -1)
+            } else {
+                VibrationEffect.createWaveform(timings, -1)
+            }
+
+            val attrs = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_ALARM)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build()
+
+            vibrator.cancel()   // 이전 진동이 남아 있으면 끊고 새로 시작
+            @Suppress("DEPRECATION")
+            vibrator.vibrate(effect, attrs)
+            Log.d(TAG, "진동 재생 (${timings.size / 2}회 구간)")
         } catch (e: Exception) {
             Log.e(TAG, "진동 실패", e)
         }
@@ -80,12 +111,10 @@ object AlertPlayer {
                 ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
             val ringtone = RingtoneManager.getRingtone(context, uri)
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                ringtone.audioAttributes = AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_ALARM)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build()
-            }
+            ringtone.audioAttributes = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_ALARM)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build()
 
             ringtone.play()
 
