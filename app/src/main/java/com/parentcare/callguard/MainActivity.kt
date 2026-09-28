@@ -288,6 +288,9 @@ class MainActivity : AppCompatActivity() {
         hasPermission(Manifest.permission.READ_CALL_LOG) &&
                 hasPermission(Manifest.permission.PROCESS_OUTGOING_CALLS)
 
+   private fun hasPermission(p: String) =
+        ContextCompat.checkSelfPermission(this, p) == PackageManager.PERMISSION_GRANTED
+                
     private fun canDrawOverlay(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
             Settings.canDrawOverlays(this) else true
