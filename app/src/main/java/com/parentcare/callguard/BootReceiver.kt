@@ -17,7 +17,6 @@ class BootReceiver : BroadcastReceiver() {
         if (intent.action == "android.intent.action.BOOT_COMPLETED") {
             PrefsHelper.setLastCallState(context, TelephonyManager.EXTRA_STATE_IDLE)
             PrefsHelper.clearLastNumber(context)
-            PrefsHelper.clearPendingOutgoing(context)
         }
     }
 }
