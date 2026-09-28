@@ -3,6 +3,18 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+// ---- 릴리스 서명 설정 -------------------------------------------------------
+// 키스토어와 비밀번호는 절대 저장소에 넣지 않는다.
+// GitHub Actions 가 시크릿을 환경변수로 넘기고, 워크플로가 키스토어를 app/release.keystore 로 복원한다.
+//   KEYSTORE_PASSWORD / KEY_ALIAS / KEY_PASSWORD  (KEYSTORE_BASE64 는 워크플로가 파일로 변환)
+// 하나라도 없으면 서명 없이 빌드된다(디버그 빌드·포크 PR 은 영향 없음).
+// 로컬에서 릴리스를 서명하려면 같은 이름의 환경변수를 설정하고 app/release.keystore 를 두면 된다.
+def releaseKeystore = file("release.keystore")
+def hasReleaseSigning = releaseKeystore.exists() &&
+        System.getenv("KEYSTORE_PASSWORD") &&
+        System.getenv("KEY_ALIAS") &&
+        System.getenv("KEY_PASSWORD")
+
 android {
     namespace 'com.parentcare.callguard'
     compileSdk 34
@@ -15,9 +27,23 @@ android {
         versionName "1.0"
     }
 
+    signingConfigs {
+        release {
+            if (hasReleaseSigning) {
+                storeFile releaseKeystore
+                storePassword System.getenv("KEYSTORE_PASSWORD")
+                keyAlias System.getenv("KEY_ALIAS")
+                keyPassword System.getenv("KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 
