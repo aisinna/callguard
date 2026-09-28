@@ -59,5 +59,9 @@
             </intent-filter>
         </receiver>
 
+        <service
+            android:name=".WarningOverlayService"
+            android:exported="false" />
+        
     </application>
 </manifest>
