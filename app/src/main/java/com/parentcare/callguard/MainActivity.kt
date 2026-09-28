@@ -283,14 +283,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun mark(ok: Boolean) = if (ok) "[O]" else "[X]"
 
-    /** 수신 번호(READ_CALL_LOG)와 발신 번호(PROCESS_OUTGOING_CALLS) 권한을 모두 가졌는지 */
+    /** 수신 번호를 읽기 위한 통화 기록 권한(READ_CALL_LOG)을 가졌는지 */
     private fun hasCallLogPermissions() =
-        hasPermission(Manifest.permission.READ_CALL_LOG) &&
-                hasPermission(Manifest.permission.PROCESS_OUTGOING_CALLS)
+        hasPermission(Manifest.permission.READ_CALL_LOG)
 
-   private fun hasPermission(p: String) =
+    private fun hasPermission(p: String) =
         ContextCompat.checkSelfPermission(this, p) == PackageManager.PERMISSION_GRANTED
-                
+
     private fun canDrawOverlay(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
             Settings.canDrawOverlays(this) else true
@@ -404,7 +403,6 @@ class MainActivity : AppCompatActivity() {
         val permissions = mutableListOf(
             Manifest.permission.READ_PHONE_STATE,
             Manifest.permission.READ_CALL_LOG,
-            Manifest.permission.PROCESS_OUTGOING_CALLS,
             Manifest.permission.SEND_SMS
         )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -444,10 +442,7 @@ class MainActivity : AppCompatActivity() {
         }
         ActivityCompat.requestPermissions(
             this,
-            arrayOf(
-                Manifest.permission.READ_CALL_LOG,
-                Manifest.permission.PROCESS_OUTGOING_CALLS
-            ),
+            arrayOf(Manifest.permission.READ_CALL_LOG),
             REQ_CALL_LOG
         )
     }
