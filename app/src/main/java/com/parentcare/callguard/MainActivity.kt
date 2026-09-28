@@ -129,6 +129,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btn_perm_overlay).setOnClickListener { openOverlaySettings() }
         findViewById<Button>(R.id.btn_perm_alarm).setOnClickListener { openExactAlarmSettings() }
         findViewById<Button>(R.id.btn_perm_battery).setOnClickListener { openBatterySettings() }
+        findViewById<Button>(R.id.btn_perm_calllog).setOnClickListener { requestCallLogPermission() }
     }
 
     // ---------------- 저장 / 시작 ----------------
@@ -260,16 +261,21 @@ class MainActivity : AppCompatActivity() {
         val battery = isIgnoringBattery()
         val sms = hasPermission(Manifest.permission.SEND_SMS)
         val phone = hasPermission(Manifest.permission.READ_PHONE_STATE)
+        val callLog = hasCallLogPermissions()
 
         val sb = StringBuilder("권한 상태\n")
         sb.append(mark(phone)).append(" 전화 상태 읽기\n")
+        sb.append(mark(callLog)).append(" 통화 기록  ← 상대 번호 확인(보호자 통화 제외)\n")
         sb.append(mark(sms)).append(" 문자 발송\n")
         sb.append(mark(overlay)).append(" 다른 앱 위에 표시  ← 경고화면 필수\n")
         sb.append(mark(exact)).append(" 알람 및 리마인더  ← 정확한 시간 필수\n")
         sb.append(mark(battery)).append(" 배터리 최적화 해제")
 
-        if (!overlay || !exact || !battery) {
+        if (!overlay || !exact || !battery || !callLog) {
             sb.append("\n\n아래 버튼으로 꺼진 권한을 켜주세요.")
+        }
+        if (!callLog) {
+            sb.append("\n통화 기록 권한이 없으면 상대 번호를 알 수 없어, 보호자와의 통화도 감시됩니다.")
         }
 
         tvPermission.text = sb.toString()
@@ -277,8 +283,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun mark(ok: Boolean) = if (ok) "[O]" else "[X]"
 
-    private fun hasPermission(p: String) =
-        ContextCompat.checkSelfPermission(this, p) == PackageManager.PERMISSION_GRANTED
+    /** 수신 번호(READ_CALL_LOG)와 발신 번호(PROCESS_OUTGOING_CALLS) 권한을 모두 가졌는지 */
+    private fun hasCallLogPermissions() =
+        hasPermission(Manifest.permission.READ_CALL_LOG) &&
+                hasPermission(Manifest.permission.PROCESS_OUTGOING_CALLS)
 
     private fun canDrawOverlay(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
@@ -392,6 +400,8 @@ class MainActivity : AppCompatActivity() {
     private fun requestRuntimePermissions() {
         val permissions = mutableListOf(
             Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.READ_CALL_LOG,
+            Manifest.permission.PROCESS_OUTGOING_CALLS,
             Manifest.permission.SEND_SMS
         )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -411,7 +421,32 @@ class MainActivity : AppCompatActivity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        // ④ 버튼으로 요청했는데 팝업 없이 바로 거부됐다면 '다시 묻지 않음' 상태이므로 설정 화면으로 안내
+        if (requestCode == REQ_CALL_LOG && !hasCallLogPermissions() &&
+            !ActivityCompat.shouldShowRequestPermissionRationale(
+                this, Manifest.permission.READ_CALL_LOG
+            )
+        ) {
+            toast("설정 > 권한 에서 '통화 기록'(또는 '전화')을 허용해주세요")
+            openAppDetails()
+        }
         refreshStatus()
+    }
+
+    private fun requestCallLogPermission() {
+        if (hasCallLogPermissions()) {
+            toast("이미 허용되어 있습니다")
+            return
+        }
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(
+                Manifest.permission.READ_CALL_LOG,
+                Manifest.permission.PROCESS_OUTGOING_CALLS
+            ),
+            REQ_CALL_LOG
+        )
     }
 
     private fun toast(msg: String) {
