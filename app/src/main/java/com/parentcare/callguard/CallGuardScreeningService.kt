@@ -14,6 +14,9 @@ import android.util.Log
  * 서로지킴은 스팸을 걸러내지 않는다 — 번호만 저장해 두고, 통화는 시스템 기본 동작 그대로
  * 두어야(허용해야) 한다. 그래서 onScreenCall 은 항상 "막지도 거절하지도 않음"으로 응답한다.
  * 이후 통화 시간 감시·화이트리스트 판정은 지금까지처럼 CallStateReceiver 가 한다.
+ *
+ * 주의: 시스템은 연락처에 없는 번호의 전화만 이 서비스로 넘긴다. 연락처에 저장된 사람(보호자 등)의
+ * 전화까지 받으려면 READ_CONTACTS 권한이 있어야 한다(2026-09-29 실기기에서 확인).
  */
 class CallGuardScreeningService : CallScreeningService() {
 

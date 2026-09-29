@@ -151,6 +151,8 @@ class MainActivity : AppCompatActivity() {
             .setMessage(
                 "서로지킴은 통화 시간을 재고, 오래 통화하면 등록한 보호자에게 상대 번호와 함께 " +
                         "알릴 수 있는 문자 작성 화면을 엽니다(문자는 직접 '보내기'를 눌러야 나갑니다).\n\n" +
+                        "연락처 권한은 걸려 온 전화가 보호자 등 저장된 사람인지 확인하는 데만 쓰며, " +
+                        "연락처 내용을 따로 읽거나 저장하지 않습니다.\n\n" +
                         "통화 내용을 녹음하거나 듣지 않으며, 서버로 아무것도 전송하지 않습니다."
             )
             .setCancelable(false)
@@ -289,6 +291,7 @@ class MainActivity : AppCompatActivity() {
         val exact = canScheduleExact()
         val battery = isIgnoringBattery()
         val phone = hasPermission(Manifest.permission.READ_PHONE_STATE)
+        val contacts = hasPermission(Manifest.permission.READ_CONTACTS)
         val screening = hasCallScreeningRole()
         val screeningSupported = isCallScreeningSupported()
 
@@ -296,6 +299,7 @@ class MainActivity : AppCompatActivity() {
         sb.append(mark(phone)).append(" 전화 상태 읽기\n")
         if (screeningSupported) {
             sb.append(mark(screening)).append(" 발신자 정보 앱  ← 상대 번호 확인(보호자 통화 제외)\n")
+            sb.append(mark(contacts)).append(" 연락처  ← 저장된 사람의 번호도 확인\n")
         }
         sb.append(mark(overlay)).append(" 다른 앱 위에 표시  ← 경고화면 필수\n")
         sb.append(mark(exact)).append(" 알람 및 리마인더  ← 정확한 시간 필수\n")
@@ -308,6 +312,10 @@ class MainActivity : AppCompatActivity() {
         }
         if (screeningMissing) {
             sb.append("\n발신자 정보 앱으로 설정하지 않으면 상대 번호를 알 수 없어, 보호자와의 통화도 감시됩니다.")
+        }
+        if (screeningSupported && !contacts) {
+            sb.append("\n연락처 권한이 없으면 연락처에 저장된 사람(보호자 포함)의 번호를 알 수 없어, " +
+                    "보호자와의 통화도 감시됩니다. 설정 > 애플리케이션 > 서로지킴 > 권한 에서 켜주세요.")
         }
         if (!screeningSupported) {
             sb.append("\n이 안드로이드 버전에서는 상대 번호 확인 기능을 지원하지 않습니다.")
@@ -442,7 +450,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun requestRuntimePermissions() {
         val permissions = mutableListOf(
-            Manifest.permission.READ_PHONE_STATE
+            Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.READ_CONTACTS   // 연락처에 저장된 사람의 전화도 번호를 받기 위해
         )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             permissions.add(Manifest.permission.POST_NOTIFICATIONS)
