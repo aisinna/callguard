@@ -1,0 +1,17 @@
+# Gradle / Android
+.gradle/
+build/
+app/build/
+local.properties
+*.apk
+*.aab
+
+# 서명 키 (절대 커밋 금지)
+*.keystore
+*.jks
+app/release.keystore
+
+# IDE
+.idea/
+*.iml
+.DS_Store
