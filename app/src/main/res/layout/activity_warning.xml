@@ -57,6 +57,26 @@
             android:textColor="#FFCDD2"
             android:gravity="center"
             android:paddingTop="8dp"
+            android:paddingBottom="12dp" />
+
+        <Button
+            android:id="@+id/btn_sms"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="보호자에게 문자 보내기"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#C62828"
+            android:background="#FFEBEE" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="문자 작성 화면이 열리면 '보내기'만 누르면 됩니다."
+            android:textSize="12sp"
+            android:textColor="#FFCDD2"
+            android:gravity="center"
+            android:paddingTop="8dp"
             android:paddingBottom="28dp" />
 
         <View
@@ -86,7 +106,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="보호자에게 '안심하세요'라는 문자가 발송됩니다."
+            android:text="보호자에게 보낼 '안심하세요' 문자 작성 화면이 열립니다."
             android:textSize="12sp"
             android:textColor="#FFCDD2"
             android:gravity="center"

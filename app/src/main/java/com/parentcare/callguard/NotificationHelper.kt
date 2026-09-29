@@ -135,7 +135,7 @@ object NotificationHelper {
             val locked = context.getSystemService(KeyguardManager::class.java)
                 ?.isKeyguardLocked ?: false
 
-            if (canOverlay && !locked && WarningOverlayService.start(context)) return
+            if (canOverlay && !locked && WarningOverlayService.start(context, number, seconds)) return
         } catch (e: Exception) {
             Log.w(TAG, "오버레이 경고 실패, Activity 로 대체", e)
         }

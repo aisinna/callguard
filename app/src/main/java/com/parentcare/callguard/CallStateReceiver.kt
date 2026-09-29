@@ -11,8 +11,11 @@ import android.util.Log
  *
  * 감시 대상은 '걸려 온 전화'(수신)뿐이다. 내가 건 전화는 감시하지 않는다.
  *
- * 수신 통화: RINGING(번호 저장) → OFFHOOK(받음, 알람 예약) → IDLE(알람 취소)
+ * 수신 통화: RINGING → OFFHOOK(받음, 알람 예약) → IDLE(알람 취소)
  * 발신 통화: (RINGING 없이) OFFHOOK → 감시 안 함 → IDLE
+ *
+ * 상대 번호는 이 리시버가 아니라 CallGuardScreeningService 가 채운다(READ_CALL_LOG 없이
+ * 번호를 얻는 방법). 이 리시버는 통화 상태 전환과 타이밍만 담당한다.
  *
  * 직전 상태를 SharedPreferences 에 저장해 두므로, 프로세스가 종료돼도
  * "RINGING 다음의 OFFHOOK = 수신, IDLE 다음의 OFFHOOK = 발신" 판정이 유지된다.
@@ -44,12 +47,8 @@ class CallStateReceiver : BroadcastReceiver() {
                 // 통화 중 걸려온 두 번째 전화(통화 대기)는 무시
                 if (prev == TelephonyManager.EXTRA_STATE_OFFHOOK) return
 
-                // 같은 벨소리에 RINGING 이 두 번 오는 기기가 많다.
-                // 번호는 두 번째에만 들어있는 경우가 있으므로 중복 제거하지 않는다.
-                val number = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER)
-                if (monitoring && !number.isNullOrBlank()) {
-                    PrefsHelper.setLastNumber(context, number)
-                }
+                // 상대 번호는 여기서 읽지 않는다. READ_CALL_LOG 없이는 이 인텐트에 번호가 실리지 않고,
+                // CallGuardScreeningService 가 전화가 오는 시점에 이미 PrefsHelper 에 저장해 두었다.
                 PrefsHelper.setLastCallState(context, state)
             }
 

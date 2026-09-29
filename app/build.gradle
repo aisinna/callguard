@@ -17,14 +17,19 @@ def hasReleaseSigning = releaseKeystore.exists() &&
 
 android {
     namespace 'com.parentcare.callguard'
+    // TODO(스토어 제출 전 필수, 2026-09-29 기준): 구글 플레이는 신규 앱 제출에 targetSdk 36(Android 16)을
+    // 요구한다. compileSdk 36 은 AGP 9.0+ 가 필요하고, AGP 9.0 은 지금 쓰는 별도 Kotlin 플러그인
+    // (org.jetbrains.kotlin.android) 과 호환되지 않는 새 DSL 을 쓴다 — 버전 숫자만 올리는 문제가 아니다.
+    // 이 환경(Gradle/AGP 를 실제로 돌려볼 수 없음)에서는 이 마이그레이션을 검증할 수 없어 손대지 않았다.
+    // Android Studio 의 "AGP Upgrade Assistant"로 진행할 것. DEVELOPMENT.md 참고.
     compileSdk 34
 
     defaultConfig {
         applicationId "com.parentcare.callguard"
         minSdk 26
         targetSdk 34
-        versionCode 1
-        versionName "1.0"
+        versionCode 2
+        versionName "1.5"
     }
 
     signingConfigs {

@@ -103,12 +103,12 @@
                 android:text="③ 배터리 최적화 해제" />
 
             <Button
-                android:id="@+id/btn_perm_calllog"
+                android:id="@+id/btn_perm_screening"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:layout_marginBottom="20dp"
-                android:text="④ 통화 기록 권한 (상대 번호 확인)" />
+                android:text="④ 발신자 정보 앱으로 설정 (상대 번호 확인)" />
 
             <TextView
                 android:layout_width="match_parent"

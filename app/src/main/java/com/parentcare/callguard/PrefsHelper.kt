@@ -13,8 +13,7 @@ object PrefsHelper {
     private const val KEY_SECOND_SECONDS = "second_seconds"
     private const val KEY_MONITORING = "monitoring_enabled"
     private const val KEY_LAST_CALL_STATE = "last_call_state"
-    private const val KEY_PENDING_OUT_NUMBER = "pending_outgoing_number"
-    private const val KEY_PENDING_OUT_AT = "pending_outgoing_at"
+    private const val KEY_CONSENT_GIVEN = "consent_given_v1"
 
     /** 번호를 알 수 없을 때 쓰는 표시 문자열 */
     const val UNKNOWN_NUMBER = "알수없음"
@@ -153,31 +152,14 @@ object PrefsHelper {
         return prefs(context).getString(KEY_LAST_CALL_STATE, "IDLE") ?: "IDLE"
     }
 
-    // ----- 발신 번호 (NEW_OUTGOING_CALL 로 받은 값을 OFFHOOK 때까지 보관) -----
+    // ----- 온보딩 동의 (권한을 요청하기 전에 한 번 보여준다) -----
 
-    fun setPendingOutgoing(context: Context, number: String) {
-        prefs(context).edit()
-            .putString(KEY_PENDING_OUT_NUMBER, number)
-            .putLong(KEY_PENDING_OUT_AT, System.currentTimeMillis())
-            .apply()
+    fun setConsentGiven(context: Context, given: Boolean) {
+        prefs(context).edit().putBoolean(KEY_CONSENT_GIVEN, given).apply()
     }
 
-    /** 보관된 발신 번호를 꺼내고 비운다. maxAgeMs 보다 오래됐으면 null */
-    fun takePendingOutgoing(context: Context, maxAgeMs: Long): String? {
-        val p = prefs(context)
-        val number = p.getString(KEY_PENDING_OUT_NUMBER, null)
-        val at = p.getLong(KEY_PENDING_OUT_AT, 0L)
-        clearPendingOutgoing(context)
-        if (number.isNullOrBlank()) return null
-        if (System.currentTimeMillis() - at > maxAgeMs) return null
-        return number
-    }
-
-    fun clearPendingOutgoing(context: Context) {
-        prefs(context).edit()
-            .remove(KEY_PENDING_OUT_NUMBER)
-            .remove(KEY_PENDING_OUT_AT)
-            .apply()
+    fun isConsentGiven(context: Context): Boolean {
+        return prefs(context).getBoolean(KEY_CONSENT_GIVEN, false)
     }
 
     private fun prefs(context: Context) =

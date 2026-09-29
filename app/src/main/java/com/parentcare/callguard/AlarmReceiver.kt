@@ -27,8 +27,9 @@ class AlarmReceiver : BroadcastReceiver() {
                 }
                 TYPE_SECOND -> {
                     Log.d(TAG, "2차 경고 (${seconds}초)")
+                    // 문자는 더 이상 여기서 자동으로 보내지 않는다 (SEND_SMS 권한 없이는 불가능).
+                    // 경고 화면의 '보호자에게 문자 보내기' 버튼을 탭하면 그때 문자 작성 화면이 열린다.
                     NotificationHelper.showSecondWarning(context, number, seconds)
-                    SmsHelper.notifyGuardians(context, number, seconds)
                 }
             }
         } catch (e: Exception) {

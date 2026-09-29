@@ -1,6 +1,8 @@
 package com.parentcare.callguard
 
 import android.Manifest
+import android.app.AlertDialog
+import android.app.role.RoleManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -26,7 +28,8 @@ import androidx.core.content.ContextCompat
 class MainActivity : AppCompatActivity() {
 
     companion object {
-        private const val REQ_CALL_LOG = 101
+        private const val REQ_RUNTIME_PERMISSIONS = 100
+        private const val REQ_CALL_SCREENING_ROLE = 101
     }
 
     private lateinit var etMyName: EditText
@@ -55,7 +58,7 @@ class MainActivity : AppCompatActivity() {
             bindViews()
             loadSaved()
             setupButtons()
-            requestRuntimePermissions()
+            ensureConsentThenRequestPermissions()
             refreshStatus()
         } catch (e: Exception) {
             e.printStackTrace()
@@ -123,13 +126,39 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<Button>(R.id.btn_test_sms).setOnClickListener {
-            SmsHelper.sendTest(this)
+            SmsHelper.composeTest(this)
         }
 
         findViewById<Button>(R.id.btn_perm_overlay).setOnClickListener { openOverlaySettings() }
         findViewById<Button>(R.id.btn_perm_alarm).setOnClickListener { openExactAlarmSettings() }
         findViewById<Button>(R.id.btn_perm_battery).setOnClickListener { openBatterySettings() }
-        findViewById<Button>(R.id.btn_perm_calllog).setOnClickListener { requestCallLogPermission() }
+        findViewById<Button>(R.id.btn_perm_screening).setOnClickListener { requestCallScreeningRole() }
+    }
+
+    // ---------------- 온보딩 동의 ----------------
+
+    /**
+     * 권한을 요청하기 전에, 이 앱이 무엇을 하는지 먼저 보여주고 동의를 받는다.
+     * 한 번 동의하면 다음 실행부터는 바로 권한 요청으로 넘어간다.
+     */
+    private fun ensureConsentThenRequestPermissions() {
+        if (PrefsHelper.isConsentGiven(this)) {
+            requestRuntimePermissions()
+            return
+        }
+        AlertDialog.Builder(this)
+            .setTitle("시작하기 전에 확인해주세요")
+            .setMessage(
+                "서로지킴은 통화 시간을 재고, 오래 통화하면 등록한 보호자에게 상대 번호와 함께 " +
+                        "알릴 수 있는 문자 작성 화면을 엽니다(문자는 직접 '보내기'를 눌러야 나갑니다).\n\n" +
+                        "통화 내용을 녹음하거나 듣지 않으며, 서버로 아무것도 전송하지 않습니다."
+            )
+            .setCancelable(false)
+            .setPositiveButton("동의하고 시작") { _, _ ->
+                PrefsHelper.setConsentGiven(this, true)
+                requestRuntimePermissions()
+            }
+            .show()
     }
 
     // ---------------- 저장 / 시작 ----------------
@@ -259,23 +288,29 @@ class MainActivity : AppCompatActivity() {
         val overlay = canDrawOverlay()
         val exact = canScheduleExact()
         val battery = isIgnoringBattery()
-        val sms = hasPermission(Manifest.permission.SEND_SMS)
         val phone = hasPermission(Manifest.permission.READ_PHONE_STATE)
-        val callLog = hasCallLogPermissions()
+        val screening = hasCallScreeningRole()
+        val screeningSupported = isCallScreeningSupported()
 
         val sb = StringBuilder("권한 상태\n")
         sb.append(mark(phone)).append(" 전화 상태 읽기\n")
-        sb.append(mark(callLog)).append(" 통화 기록  ← 상대 번호 확인(보호자 통화 제외)\n")
-        sb.append(mark(sms)).append(" 문자 발송\n")
+        if (screeningSupported) {
+            sb.append(mark(screening)).append(" 발신자 정보 앱  ← 상대 번호 확인(보호자 통화 제외)\n")
+        }
         sb.append(mark(overlay)).append(" 다른 앱 위에 표시  ← 경고화면 필수\n")
         sb.append(mark(exact)).append(" 알람 및 리마인더  ← 정확한 시간 필수\n")
-        sb.append(mark(battery)).append(" 배터리 최적화 해제")
+        sb.append(mark(battery)).append(" 배터리 최적화 해제\n")
+        sb.append("보호자 알림: 2차 경고 화면에서 문자 작성 화면을 열어줍니다 (별도 권한 불필요)")
 
-        if (!overlay || !exact || !battery || !callLog) {
+        val screeningMissing = screeningSupported && !screening
+        if (!overlay || !exact || !battery || screeningMissing) {
             sb.append("\n\n아래 버튼으로 꺼진 권한을 켜주세요.")
         }
-        if (!callLog) {
-            sb.append("\n통화 기록 권한이 없으면 상대 번호를 알 수 없어, 보호자와의 통화도 감시됩니다.")
+        if (screeningMissing) {
+            sb.append("\n발신자 정보 앱으로 설정하지 않으면 상대 번호를 알 수 없어, 보호자와의 통화도 감시됩니다.")
+        }
+        if (!screeningSupported) {
+            sb.append("\n이 안드로이드 버전에서는 상대 번호 확인 기능을 지원하지 않습니다.")
         }
 
         tvPermission.text = sb.toString()
@@ -283,9 +318,15 @@ class MainActivity : AppCompatActivity() {
 
     private fun mark(ok: Boolean) = if (ok) "[O]" else "[X]"
 
-    /** 수신 번호를 읽기 위한 통화 기록 권한(READ_CALL_LOG)을 가졌는지 */
-    private fun hasCallLogPermissions() =
-        hasPermission(Manifest.permission.READ_CALL_LOG)
+    /** 안드로이드 10(API 29) 이상에서만 "발신자 정보 및 스팸 방지 앱" 역할을 쓸 수 있다 */
+    private fun isCallScreeningSupported() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+
+    /** 서로지킴이 "발신자 정보 및 스팸 방지 앱" 역할을 가졌는지 (READ_CALL_LOG 없이 번호를 얻는 방법) */
+    private fun hasCallScreeningRole(): Boolean {
+        if (!isCallScreeningSupported()) return false
+        val rm = getSystemService(RoleManager::class.java) ?: return false
+        return rm.isRoleHeld(RoleManager.ROLE_CALL_SCREENING)
+    }
 
     private fun hasPermission(p: String) =
         ContextCompat.checkSelfPermission(this, p) == PackageManager.PERMISSION_GRANTED
@@ -401,9 +442,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun requestRuntimePermissions() {
         val permissions = mutableListOf(
-            Manifest.permission.READ_PHONE_STATE,
-            Manifest.permission.READ_CALL_LOG,
-            Manifest.permission.SEND_SMS
+            Manifest.permission.READ_PHONE_STATE
         )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             permissions.add(Manifest.permission.POST_NOTIFICATIONS)
@@ -412,7 +451,7 @@ class MainActivity : AppCompatActivity() {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }
         if (notGranted.isNotEmpty()) {
-            ActivityCompat.requestPermissions(this, notGranted.toTypedArray(), 100)
+            ActivityCompat.requestPermissions(this, notGranted.toTypedArray(), REQ_RUNTIME_PERMISSIONS)
         }
     }
 
@@ -422,29 +461,36 @@ class MainActivity : AppCompatActivity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-
-        // ④ 버튼으로 요청했는데 팝업 없이 바로 거부됐다면 '다시 묻지 않음' 상태이므로 설정 화면으로 안내
-        if (requestCode == REQ_CALL_LOG && !hasCallLogPermissions() &&
-            !ActivityCompat.shouldShowRequestPermissionRationale(
-                this, Manifest.permission.READ_CALL_LOG
-            )
-        ) {
-            toast("설정 > 권한 에서 '통화 기록'(또는 '전화')을 허용해주세요")
-            openAppDetails()
-        }
         refreshStatus()
     }
 
-    private fun requestCallLogPermission() {
-        if (hasCallLogPermissions()) {
-            toast("이미 허용되어 있습니다")
+    @Suppress("DEPRECATION")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQ_CALL_SCREENING_ROLE) {
+            refreshStatus()
+        }
+    }
+
+    /** "발신자 정보 및 스팸 방지 앱" 역할을 요청한다 (READ_CALL_LOG 없이 상대 번호를 얻는 방법) */
+    private fun requestCallScreeningRole() {
+        if (!isCallScreeningSupported()) {
+            toast("이 기능은 안드로이드 10 이상에서 지원됩니다")
             return
         }
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(Manifest.permission.READ_CALL_LOG),
-            REQ_CALL_LOG
-        )
+        if (hasCallScreeningRole()) {
+            toast("이미 설정되어 있습니다")
+            return
+        }
+        val rm = getSystemService(RoleManager::class.java)
+        val intent = rm?.createRequestRoleIntent(RoleManager.ROLE_CALL_SCREENING)
+        if (intent != null) {
+            @Suppress("DEPRECATION")
+            startActivityForResult(intent, REQ_CALL_SCREENING_ROLE)
+        } else {
+            toast("설정 > 앱 > 기본 앱 에서 '발신자 정보 및 스팸 방지 앱'을 서로지킴으로 바꿔주세요")
+            openAppDetails()
+        }
     }
 
     private fun toast(msg: String) {

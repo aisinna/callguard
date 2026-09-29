@@ -2,9 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <!-- Android 9+ 에서 수신 번호(EXTRA_INCOMING_NUMBER)를 받으려면 필요 -->
-    <uses-permission android:name="android.permission.READ_CALL_LOG" />
-    <uses-permission android:name="android.permission.SEND_SMS" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -13,6 +10,11 @@
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- WarningOverlayService 를 정식 포그라운드 서비스로 띄우기 위해 필요 (2026-09-29, v1.5) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- READ_CALL_LOG·SEND_SMS 는 v1.5 에서 제거했다. 구글 플레이가 기본 전화/문자 앱에만 허용하기 때문.
+         상대 번호는 CallGuardScreeningService(발신자 정보 앱 역할)로, 보호자 알림은 문자 작성 화면으로 대체했다. -->
 
     <application
         android:label="@string/app_name"
@@ -63,7 +65,23 @@
 
         <service
             android:name=".WarningOverlayService"
-            android:exported="false" />
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="call_safety_warning_overlay" />
+        </service>
+
+        <!-- "발신자 정보 및 스팸 방지 앱" 역할을 받으면 시스템이 전화가 오는 즉시 이 서비스를 부른다.
+             READ_CALL_LOG 없이 상대 번호를 얻는 방법. 스팸을 걸러내지는 않는다(번호만 저장). -->
+        <service
+            android:name=".CallGuardScreeningService"
+            android:permission="android.permission.BIND_SCREENING_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.telecom.CallScreeningService" />
+            </intent-filter>
+        </service>
 
     </application>
 </manifest>

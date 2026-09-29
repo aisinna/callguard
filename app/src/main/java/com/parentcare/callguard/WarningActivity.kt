@@ -18,7 +18,10 @@ class WarningActivity : AppCompatActivity() {
         // 오버레이가 떠 있었다면 닫아서 경고가 두 겹으로 보이지 않게 한다
         WarningOverlayService.stop(this)
 
-        WarningUi.bind(this, findViewById<View>(android.R.id.content)) { finish() }
+        val number = intent.getStringExtra("number") ?: PrefsHelper.UNKNOWN_NUMBER
+        val seconds = intent.getIntExtra("seconds", 0)
+
+        WarningUi.bind(this, findViewById<View>(android.R.id.content), number, seconds) { finish() }
     }
 
     /** 뒤로가기로 실수로 닫히지 않게 막는다 */
