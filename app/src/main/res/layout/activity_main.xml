@@ -278,6 +278,20 @@
                 android:inputType="phone"
                 android:hint="예: 021234567,0312345678" />
 
+            <CheckBox
+                android:id="@+id/cb_skip_contacts"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="연락처에 저장된 번호에서 온 전화는 감시하지 않기" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                android:lineSpacingExtra="4dp"
+                android:text="처음 보는 사람이 알려준 번호를 연락처에 저장해 두었다면 그 번호도 감시하지 않게 됩니다. 불안하면 체크를 끄세요." />
+
             <Button
                 android:id="@+id/btn_save"
                 android:layout_width="match_parent"

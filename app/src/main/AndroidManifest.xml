@@ -4,7 +4,7 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <!-- 발신자 정보 앱 역할만으로는 연락처에 없는 번호의 전화만 CallGuardScreeningService 로 넘어온다.
          이 권한이 있어야 연락처에 저장된 사람(보호자 포함)의 전화도 넘어와 번호를 알 수 있다.
-         연락처 내용은 읽지 않는다 — 시스템이 심사 대상을 넓히는 조건으로만 쓰인다. -->
+         그 밖에는 걸려 온 번호가 연락처에 있는지만 확인한다(ContactLookup, 설정으로 감시 제외). 이름 등은 읽지 않는다. -->
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.VIBRATE" />

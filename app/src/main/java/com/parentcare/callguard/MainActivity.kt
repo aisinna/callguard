@@ -16,6 +16,7 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import android.provider.Settings
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -41,6 +42,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var etGuardian2: EditText
     private lateinit var etGuardian3: EditText
     private lateinit var etWhitelist: EditText
+    private lateinit var cbSkipContacts: CheckBox
     private lateinit var tvStatusDetail: TextView
     private lateinit var tvPermission: TextView
     private lateinit var btnSave: Button
@@ -83,6 +85,7 @@ class MainActivity : AppCompatActivity() {
         etGuardian2 = findViewById(R.id.et_guardian2)
         etGuardian3 = findViewById(R.id.et_guardian3)
         etWhitelist = findViewById(R.id.et_whitelist_numbers)
+        cbSkipContacts = findViewById(R.id.cb_skip_contacts)
         tvStatusDetail = findViewById(R.id.tv_status_detail)
         tvPermission = findViewById(R.id.tv_permission)
         btnSave = findViewById(R.id.btn_save)
@@ -105,6 +108,7 @@ class MainActivity : AppCompatActivity() {
         etGuardian3.setText(guardians.getOrElse(2) { "" })
 
         etWhitelist.setText(PrefsHelper.getWhitelistRaw(this))
+        cbSkipContacts.isChecked = PrefsHelper.isSkipContacts(this)
     }
 
     private fun setTime(etMin: EditText, etSec: EditText, totalSeconds: Int) {
@@ -151,8 +155,8 @@ class MainActivity : AppCompatActivity() {
             .setMessage(
                 "서로지킴은 통화 시간을 재고, 오래 통화하면 등록한 보호자에게 상대 번호와 함께 " +
                         "알릴 수 있는 문자 작성 화면을 엽니다(문자는 직접 '보내기'를 눌러야 나갑니다).\n\n" +
-                        "연락처 권한은 걸려 온 전화가 보호자 등 저장된 사람인지 확인하는 데만 쓰며, " +
-                        "연락처 내용을 따로 읽거나 저장하지 않습니다.\n\n" +
+                        "연락처 권한은 걸려 온 번호가 연락처에 저장돼 있는지 확인하는 데만 쓰며, " +
+                        "이름 등 연락처 내용을 읽거나 저장하지 않습니다.\n\n" +
                         "통화 내용을 녹음하거나 듣지 않으며, 서버로 아무것도 전송하지 않습니다."
             )
             .setCancelable(false)
@@ -210,6 +214,7 @@ class MainActivity : AppCompatActivity() {
         PrefsHelper.setSecondSeconds(this, second)
         PrefsHelper.setGuardiansRaw(this, guardians.joinToString(","))
         PrefsHelper.setWhitelistRaw(this, whitelistRaw)
+        PrefsHelper.setSkipContacts(this, cbSkipContacts.isChecked)
         PrefsHelper.setMonitoring(this, true)
 
         StatusNotifier.show(this)
@@ -273,6 +278,7 @@ class MainActivity : AppCompatActivity() {
                 append("통화 $second → 경고 화면 + 보호자 알림\n")
                 append("보호자 ${guardians.size}명: ${guardians.joinToString(", ")}")
                 if (white.isNotBlank()) append("\n예외 번호: $white")
+                if (PrefsHelper.isSkipContacts(this@MainActivity)) append("\n연락처에 저장된 번호는 감시하지 않음")
             }
         } else {
             headerBox.setBackgroundColor(Color.parseColor("#757575"))
@@ -299,7 +305,7 @@ class MainActivity : AppCompatActivity() {
         sb.append(mark(phone)).append(" 전화 상태 읽기\n")
         if (screeningSupported) {
             sb.append(mark(screening)).append(" 발신자 정보 앱  ← 상대 번호 확인(보호자 통화 제외)\n")
-            sb.append(mark(contacts)).append(" 연락처  ← 저장된 사람의 번호도 확인\n")
+            sb.append(mark(contacts)).append(" 연락처  ← 저장된 사람의 번호 확인·감시 제외\n")
         }
         sb.append(mark(overlay)).append(" 다른 앱 위에 표시  ← 경고화면 필수\n")
         sb.append(mark(exact)).append(" 알람 및 리마인더  ← 정확한 시간 필수\n")

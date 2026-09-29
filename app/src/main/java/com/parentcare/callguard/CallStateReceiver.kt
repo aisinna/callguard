@@ -77,6 +77,10 @@ class CallStateReceiver : BroadcastReceiver() {
                     Log.d(TAG, "화이트리스트 번호, 감시 안 함")
                     return
                 }
+                if (PrefsHelper.isSkipContacts(context) && ContactLookup.isSavedContact(context, number)) {
+                    Log.d(TAG, "연락처에 저장된 번호, 감시 안 함")
+                    return
+                }
                 AlarmScheduler.scheduleWarnings(context, number)
             }
 

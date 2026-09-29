@@ -14,6 +14,7 @@ object PrefsHelper {
     private const val KEY_MONITORING = "monitoring_enabled"
     private const val KEY_LAST_CALL_STATE = "last_call_state"
     private const val KEY_CONSENT_GIVEN = "consent_given_v1"
+    private const val KEY_SKIP_CONTACTS = "skip_saved_contacts"
 
     /** 번호를 알 수 없을 때 쓰는 표시 문자열 */
     const val UNKNOWN_NUMBER = "알수없음"
@@ -124,6 +125,15 @@ object PrefsHelper {
         if (raw.isBlank()) return false
         val list = raw.split(",").map { normalizeNumber(it.trim()) }
         return list.any { it.isNotEmpty() && normalized.endsWith(it) }
+    }
+
+    /** 연락처에 저장된 번호에서 온 전화를 감시에서 뺄지 (기본: 뺀다) */
+    fun setSkipContacts(context: Context, skip: Boolean) {
+        prefs(context).edit().putBoolean(KEY_SKIP_CONTACTS, skip).apply()
+    }
+
+    fun isSkipContacts(context: Context): Boolean {
+        return prefs(context).getBoolean(KEY_SKIP_CONTACTS, true)
     }
 
     // ----- 현재(직전) 통화 번호 -----
