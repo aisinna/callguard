@@ -132,7 +132,7 @@
 - `SmsHelper` 로그에서 보호자 전화번호 제거(버그 신고 때 로그 첨부해도 번호가 노출되지 않게).
 - `android:allowBackup="false"` — 보호자 번호가 클라우드 백업으로 복사되지 않게(PRIVACY.md 의 "기기 밖으로 나가지 않음"과 일치시키기 위함).
 - 문서 추가: `LICENSE`(MIT), `README.md`, `PRIVACY.md`, `THIRD_PARTY_NOTICES.md`(Apache-2.0 전문 포함, 의존성 바꾸면 갱신).
-  직접 채울 빈칸: `LICENSE` 저작권자 이름, `PRIVACY.md` 문의 이메일. README 는 `docs/icon-512.png` 를 참조.
+  빈칸이던 `LICENSE` 저작권자 이름(aisinna)과 `PRIVACY.md` 문의 이메일은 채움(2026-09-29). README 는 `docs/icon-512.png` 를 참조.
 - 문서가 사실이려면 유지해야 하는 것: 앱에 INTERNET·RECORD_AUDIO 권한/분석 SDK 를 넣지 않는다. 넣게 되면 PRIVACY.md 를 먼저 고친다.
 
 ### ⚠ Android 개발자 인증 (2026-09-28 기준 공식 문서 확인, 문서 갱신일 2026-08-18)
